@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-('userType, phone, chat');
-
 const adSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -9,10 +7,15 @@ const adSchema = new mongoose.Schema({
   descrioption: {
     type: String,
   },
-  photo: [String],
-  category: [
+  photo: [
     {
       id: Number,
+      src: String,
+    },
+  ],
+  category: [
+    {
+      id: String,
       name: String,
       slug: String,
     },
@@ -27,7 +30,7 @@ const adSchema = new mongoose.Schema({
   ],
   attribute: [
     {
-      id: Number,
+      id: String,
       name: String,
       lable: String,
     },
