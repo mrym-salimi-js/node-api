@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "debug": "ndb server.js"
   },
   "author": "maryam salimi",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "ndb": "^1.1.5",
     "nodemon": "^3.1.4"
   },
   "dependencies": {
