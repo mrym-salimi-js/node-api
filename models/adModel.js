@@ -1,12 +1,8 @@
 const mongoose = require('mongoose');
 
 const adSchema = new mongoose.Schema({
-  title: {
-    type: String,
-  },
-  descrioption: {
-    type: String,
-  },
+  title: String,
+  descrioption: String,
   photo: [
     {
       id: Number,
@@ -35,15 +31,9 @@ const adSchema = new mongoose.Schema({
       lable: String,
     },
   ],
-  userType: {
-    type: String,
-  },
-  phone: {
-    type: Number,
-  },
-  chat: {
-    type: Boolean,
-  },
+  userType: String,
+  phone: Number,
+  chat: Boolean,
 });
 
 const Ad = mongoose.model('Ad', adSchema);
