@@ -11,11 +11,11 @@ app.use(express.json());
 // --Routes
 app.use('/api/ads/', adsRiutes);
 
-// ---404 ERROR (NOT FOUND) => EXIST IN REACT APP
+// ---404 ERROR (NOT FOUND ROUT) => EXIST IN REACT APP
 app.all('*', (req, res, next) => {
   res.status(404).json({
     status: 'fail',
-    message: 'آدرس معتبر نمی باشد',
+    message: 'صفحه ای با این نشانی یافت نشد!',
   });
 });
 

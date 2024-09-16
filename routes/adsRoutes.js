@@ -9,4 +9,6 @@ router
   .delete(adController.deleteAd)
   .patch(adController.updateAd);
 
+router.route('/s/:category').get(adController.getCategory);
+
 module.exports = router;

@@ -6,7 +6,7 @@ exports.getAllAd = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       result: allAd.length,
-      message: allAd,
+      data: allAd,
     });
   } catch (err) {
     res.status(404).json({
@@ -22,7 +22,7 @@ exports.getAd = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: allAd,
+      data: allAd,
     });
   } catch (err) {
     res.status(404).json({
@@ -38,7 +38,7 @@ exports.createAd = async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: newAd,
+      data: newAd,
     });
   } catch (err) {
     res.status(500).json({
@@ -54,7 +54,7 @@ exports.deleteAd = async (req, res, next) => {
 
     res.status(204).json({
       status: 'success',
-      message: null,
+      data: null,
     });
   } catch (err) {
     res.status(404).json({
@@ -73,9 +73,28 @@ exports.updateAd = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: updtedAd,
+      data: updtedAd,
     });
   } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'data not found',
+    });
+  }
+};
+
+exports.getCategory = async (req, res, next) => {
+  try {
+    const ad = await Ad.findOne({
+      category: { $elemMatch: { slug: req.params.category } },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      result: ad.length,
+      data: ad,
+    });
+  } catch (error) {
     res.status(404).json({
       status: 'fail',
       message: 'data not found',
