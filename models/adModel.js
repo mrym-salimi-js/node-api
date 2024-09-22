@@ -34,6 +34,12 @@ const adSchema = new mongoose.Schema({
   userType: String,
   phone: Number,
   chat: Boolean,
+  createAd: {
+    type: Number,
+    default: () => {
+      return new Date();
+    },
+  },
 });
 
 const Ad = mongoose.model('Ad', adSchema);

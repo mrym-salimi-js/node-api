@@ -83,16 +83,47 @@ exports.updateAd = async (req, res, next) => {
   }
 };
 
-exports.getCategory = async (req, res, next) => {
+exports.getAdsByCategory = async (req, res, next) => {
   try {
-    const ad = await Ad.findOne({
+    const cities = JSON.parse(decodeURIComponent(req.query.cities));
+
+    let sortOptions;
+    // { name: 'جدیدترین', slug: 'n' },
+    // { name: 'ارزان‌ترین', slug: 'ch' },
+    // { name: 'گران‌ترین', slug: 'ex' },
+    // { name: 'نزدیک‌ترین', slug: 'cl' },
+    // { name: 'کم کارکردترین', slug: 'lp' },
+    // { name: 'پرکارکردترین', slug: 'hp' },
+    // { name: 'قدیمی‌ترین سال', slug: 'oy' },
+    // { name: 'جدیدترین سال', slug: 'ny' },
+    if (req.query.o !== undefined) {
+      req.query.o === 'n' && (sortOptions = { createAd: -1 });
+      req.query.o === 'ch' &&
+        (sortOptions = { attribute: { $elemMatch: { name: 'قیمت (تومان)' } } });
+      req.query.o === 'ex' && (sortOptions = { createAd: -1 });
+      req.query.o === 'cl' && (sortOptions = { createAd: -1 });
+      req.query.o === 'lp' && (sortOptions = { createAd: -1 });
+      req.query.o === 'cl' && (sortOptions = { createAd: -1 });
+      req.query.o === 'oy' && (sortOptions = { createAd: 1 });
+      req.query.o === 'ny' && (sortOptions = { createAd: 1 });
+      req.query.o === 'hp' && (sortOptions = { createAd: 1 });
+    }
+
+    const ads = await Ad.find({
+      location: { $elemMatch: { id: { $in: cities } } },
       category: { $elemMatch: { slug: req.params.category } },
-    });
+    }).sort(sortOptions);
+
+    // const ads = await Ad.aggregate([
+    //   {
+    //     $match: { category: { $elemMatch: { slug: req.params.category } } },
+    //   },
+    // ]);
 
     res.status(200).json({
       status: 'success',
-      result: ad.length,
-      data: ad,
+      result: ads.length,
+      data: ads,
     });
   } catch (error) {
     res.status(404).json({
@@ -101,3 +132,25 @@ exports.getCategory = async (req, res, next) => {
     });
   }
 };
+
+// exports.getAdsByFilter = async (req, res, next) => {
+//   try {
+//     console.log(req.query);
+//     const filters = req.query;
+
+//     // const ads = await Ad.find({
+//     //   category: { $elemMatch: { slug: req.params.category } },
+//     // });
+
+//     // res.status(200).json({
+//     //   status: 'success',
+//     //   result: ads.length,
+//     //   data: ads,
+//     // });
+//   } catch (error) {
+//     res.status(404).json({
+//       status: 'fail',
+//       message: 'data not found',
+//     });
+//   }
+// };

@@ -9,6 +9,8 @@ router
   .delete(adController.deleteAd)
   .patch(adController.updateAd);
 
-router.route('/s/:category').get(adController.getCategory);
+router.route('/s/:category').get(adController.getAdsByCategory);
+
+// router.route('/filter').get(adController.getAdsByFilter);
 
 module.exports = router;
