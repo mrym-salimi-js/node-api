@@ -28,7 +28,9 @@ const adSchema = new mongoose.Schema({
     {
       id: String,
       name: String,
-      lable: String,
+      lable: {
+        type: mongoose.Schema.Types.Mixed,
+      },
     },
   ],
   userType: String,

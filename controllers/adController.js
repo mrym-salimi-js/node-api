@@ -89,35 +89,62 @@ exports.getAdsByCategory = async (req, res, next) => {
 
     let sortOptions;
     // { name: 'جدیدترین', slug: 'n' },
-    // { name: 'ارزان‌ترین', slug: 'ch' },
+    // { name: 'ارزان‌ترین', slug: 'ch' }, ---> price
     // { name: 'گران‌ترین', slug: 'ex' },
-    // { name: 'نزدیک‌ترین', slug: 'cl' },
-    // { name: 'کم کارکردترین', slug: 'lp' },
+    // { name: 'کم کارکردترین', slug: 'lp' }, ----> km
     // { name: 'پرکارکردترین', slug: 'hp' },
-    // { name: 'قدیمی‌ترین سال', slug: 'oy' },
+    // { name: 'قدیمی‌ترین سال', slug: 'oy' }, ----> year
     // { name: 'جدیدترین سال', slug: 'ny' },
     if (req.query.o !== undefined) {
       req.query.o === 'n' && (sortOptions = { createAd: -1 });
-      req.query.o === 'ch' &&
-        (sortOptions = { attribute: { $elemMatch: { name: 'قیمت (تومان)' } } });
+      req.query.o === 'ch' && (sortOptions = { lable: 1 });
       req.query.o === 'ex' && (sortOptions = { createAd: -1 });
-      req.query.o === 'cl' && (sortOptions = { createAd: -1 });
       req.query.o === 'lp' && (sortOptions = { createAd: -1 });
-      req.query.o === 'cl' && (sortOptions = { createAd: -1 });
       req.query.o === 'oy' && (sortOptions = { createAd: 1 });
       req.query.o === 'ny' && (sortOptions = { createAd: 1 });
       req.query.o === 'hp' && (sortOptions = { createAd: 1 });
     }
 
+    // mx68101 => حداکثر سال تولید
+    // mx97023 => --
+    // mx68140 => --
+    // mx68102 => حداکثر کیلومتر
+    // mx97024 => --
+    // mx68141 => --
+    // mx68085 => حداکثر متراژ
+    // mx68090 => حداکثر رهن
+    // mx68091 => --
+    // mx68092 => حداکثر اجاره
+    // mx68093 => --
+    // mx70020 => حداکثر اجاره روزانه
     const ads = await Ad.find({
       location: { $elemMatch: { id: { $in: cities } } },
       category: { $elemMatch: { slug: req.params.category } },
+      attribute: {
+        $elemMatch: {
+          name: 'قیمت (تومان)',
+          lable: {
+            $gt: parseInt(req.query.mx45213) ? parseInt(req.query.mx8888) : 0,
+          },
+        },
+        $elemMatch: {
+          name: 'متراژ',
+          lable: {
+            $gt: parseInt(req.query.mx8888) ? parseInt(req.query.mx8888) : 0,
+          },
+        },
+      },
     }).sort(sortOptions);
 
     // const ads = await Ad.aggregate([
     //   {
-    //     $match: { category: { $elemMatch: { slug: req.params.category } } },
+    //     $match: {
+    //       category: { $elemMatch: { slug: req.params.category } },
+    //       location: { $elemMatch: { id: { $in: cities } } },
+    //     },
     //   },
+    //   { $unwind: '$attribute' },
+    //   { $sort: { 'attribute.lable': -1 } },
     // ]);
 
     res.status(200).json({
