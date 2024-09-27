@@ -31,6 +31,9 @@ const adSchema = new mongoose.Schema({
       lable: {
         type: mongoose.Schema.Types.Mixed,
       },
+      lableId: {
+        type: mongoose.Schema.Types.Mixed,
+      },
     },
   ],
   userType: String,

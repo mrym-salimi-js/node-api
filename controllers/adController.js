@@ -1,3 +1,4 @@
+const { json } = require('express');
 const Ad = require('../models/adModel');
 
 exports.getAllAd = async (req, res, next) => {
@@ -85,8 +86,6 @@ exports.updateAd = async (req, res, next) => {
 
 exports.getAdsByCategory = async (req, res, next) => {
   try {
-    const cities = JSON.parse(decodeURIComponent(req.query.cities));
-
     let sortOptions;
     // { name: 'جدیدترین', slug: 'n' },
     // { name: 'ارزان‌ترین', slug: 'ch' }, ---> price
@@ -105,6 +104,88 @@ exports.getAdsByCategory = async (req, res, next) => {
       req.query.o === 'hp' && (sortOptions = { createAd: 1 });
     }
 
+    let aQueries = [];
+    for (const queryKey in req.query) {
+      if (queryKey.startsWith('a')) {
+        aQueries.push(req.query[queryKey]);
+      }
+    }
+
+    let ads = [];
+    const category = await Ad.find({
+      category: { $elemMatch: { slug: req.params.category } },
+    });
+    ads = category;
+
+    const queries = req.query ? req.query : {};
+
+    for (let queryKey in queries) {
+      // Get Cities
+      if (queryKey === 'cities') {
+        const location = [];
+        ads.find((item) => {
+          item.location.find((locItem) => {
+            if (
+              JSON.parse(decodeURIComponent(req.query.cities)).includes(
+                locItem.id,
+              )
+            ) {
+              location.push(item);
+            }
+          });
+        });
+
+        ads = location;
+      }
+
+      // Get Querykey StartWith "a"
+      if (queryKey.startsWith('a')) {
+        const aQuery = [];
+        ads.find((item) => {
+          item.attribute?.find((attrItem) => {
+            if (JSON.stringify(queries[queryKey]) == attrItem.lableId) {
+              aQuery.push(item);
+            }
+          });
+        });
+        console.log(aQuery);
+        ads = aQuery;
+      }
+
+      // Get Querykey StartWith "mx"
+      if (queryKey.startsWith('mx')) {
+        let mxQuery = [];
+        ads.find((adItem) => {
+          adItem.attribute?.find((attrItem) => {
+            if (
+              attrItem.id == queryKey.split(/[mx]/g).join('') &&
+              attrItem.lable <= parseInt(queries[queryKey])
+            ) {
+              mxQuery.push(adItem);
+            }
+          });
+        });
+
+        ads = mxQuery;
+      }
+
+      // Get Querykey StartWith "mn"
+      if (queryKey.startsWith('mn')) {
+        let mnQuery = [];
+        ads.find((adItem) => {
+          adItem.attribute?.find((attrItem) => {
+            if (
+              attrItem.id == queryKey.split(/[mn]/g).join('') &&
+              attrItem.lable >= parseInt(queries[queryKey])
+            ) {
+              mnQuery.push(adItem);
+            }
+          });
+        });
+        ads = mnQuery;
+      }
+    }
+
     // mx68101 => حداکثر سال تولید
     // mx97023 => --
     // mx68140 => --
@@ -117,34 +198,67 @@ exports.getAdsByCategory = async (req, res, next) => {
     // mx68092 => حداکثر اجاره
     // mx68093 => --
     // mx70020 => حداکثر اجاره روزانه
-    const ads = await Ad.find({
-      location: { $elemMatch: { id: { $in: cities } } },
-      category: { $elemMatch: { slug: req.params.category } },
-      attribute: {
-        $elemMatch: {
-          name: 'قیمت (تومان)',
-          lable: {
-            $gt: parseInt(req.query.mx45213) ? parseInt(req.query.mx8888) : 0,
-          },
-        },
-        $elemMatch: {
-          name: 'متراژ',
-          lable: {
-            $gt: parseInt(req.query.mx8888) ? parseInt(req.query.mx8888) : 0,
-          },
-        },
-      },
-    }).sort(sortOptions);
+
+    // let mxMnElems;
+    // Object.keys(req.query).map((key) => {
+    //   if (key.startsWith('mx')) {
+    //     key === 'mx45213' &&
+    //       (mxMnElems = {
+    //         $elemMatch: {
+    //           name: 'متراژ',
+    //           lable: {
+    //             $lt: parseInt(queries[key]),
+    //           },
+    //         },
+    //       });
+    //   }
+    // });
+
+    // ads = await Ad.find({
+
+    //   // $and: Object.keys(queries).map((key) => {
+    //   //   if (key.startsWith('mx')) {
+    //   //     key === 'mx45213' && {
+    //   //       attribute: {
+    //   //         $elemMatch: {
+    //   //           name: 'متراژ',
+    //   //           lable: {
+    //   //             $lt: parseInt(queries[key]),
+    //   //           },
+    //   //         },
+    //   //       },
+    //   //     };
+    //   //   }
+    //   // }),
+
+    //   // attribute: {
+    //   //   $elemMatch: { lableId: { $in: aQueries } },
+    //   //   $elemMatch: {
+    //   //     name: 'قیمت (تومان)',
+    //   //     lable: {
+    //   //       $lt: req.query.mx45213 ? parseInt(req.query.mx45213) : 0,
+    //   //     },
+    //   //   },
+    //   //   $elemMatch: {
+    //   //     name: 'متراژ',
+    //   //     lable: {
+    //   //       $lt: req.query.mx8888 ? parseInt(req.query.mx8888) : 0,
+    //   //     },
+    //   //   },
+    //   // },
+    // });
 
     // const ads = await Ad.aggregate([
     //   {
     //     $match: {
     //       category: { $elemMatch: { slug: req.params.category } },
-    //       location: { $elemMatch: { id: { $in: cities } } },
+    //       location: {
+    //         $elemMatch: {
+    //           id: { $in: JSON.parse(decodeURIComponent(req.query.cities)) },
+    //         },
+    //       },
     //     },
     //   },
-    //   { $unwind: '$attribute' },
-    //   { $sort: { 'attribute.lable': -1 } },
     // ]);
 
     res.status(200).json({
@@ -155,7 +269,7 @@ exports.getAdsByCategory = async (req, res, next) => {
   } catch (error) {
     res.status(404).json({
       status: 'fail',
-      message: 'data not found',
+      message: error.message,
     });
   }
 };
