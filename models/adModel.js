@@ -26,18 +26,15 @@ const adSchema = new mongoose.Schema({
   ],
   attribute: [
     {
-      id: String,
+      id: Number,
       name: String,
-      lable: {
-        type: mongoose.Schema.Types.Mixed,
-      },
-      lableId: {
-        type: mongoose.Schema.Types.Mixed,
-      },
+      lable: String,
+      lableId: Number,
     },
   ],
+
   userType: String,
-  phone: Number,
+  phone: Boolean,
   chat: Boolean,
   createAd: {
     type: Number,

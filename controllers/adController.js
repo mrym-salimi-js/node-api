@@ -143,12 +143,13 @@ exports.getAdsByCategory = async (req, res, next) => {
         const aQuery = [];
         ads.find((item) => {
           item.attribute?.find((attrItem) => {
-            if (JSON.stringify(queries[queryKey]) == attrItem.lableId) {
+            if (queries[queryKey] === attrItem.lableId) {
               aQuery.push(item);
             }
+            console.log(queries[queryKey] === attrItem.lableId);
           });
         });
-        console.log(aQuery);
+
         ads = aQuery;
       }
 
