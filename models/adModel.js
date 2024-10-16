@@ -6,7 +6,7 @@ const adSchema = new mongoose.Schema({
   photo: [
     {
       id: Number,
-      src: String,
+      name: String,
     },
   ],
   category: [

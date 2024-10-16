@@ -1,8 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const adController = require('../controllers/adController');
+const multer = require('multer');
 
-router.route('/').get(adController.getAllAd).post(adController.createAd);
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log(req);
+    cb(null, `public/photos/`);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+router
+  .route('/')
+  .get(adController.getAllAd)
+  .post(upload.array('photoFile', 10), adController.createAd);
 router
   .route('/:id')
   .get(adController.getAd)

@@ -1,4 +1,3 @@
-const { json } = require('express');
 const Ad = require('../models/adModel');
 
 exports.getAllAd = async (req, res, next) => {
@@ -35,7 +34,38 @@ exports.getAd = async (req, res, next) => {
 
 exports.createAd = async (req, res, next) => {
   try {
-    const newAd = await Ad.create(req.body);
+    let {
+      photo,
+      category,
+      attribute,
+      title,
+      description,
+      location,
+      coordinate,
+      userType,
+      phone,
+      chat,
+    } = req.body;
+    photo = photo && JSON.parse(photo);
+    category = category && JSON.parse(category);
+    attribute = JSON.parse(attribute);
+    title = JSON.parse(title);
+    description = JSON.parse(description);
+    location = JSON.parse(location);
+    coordinate = JSON.parse(coordinate);
+
+    const newAd = await Ad.create({
+      photo,
+      category,
+      attribute,
+      title,
+      description,
+      location,
+      coordinate,
+      userType,
+      phone,
+      chat,
+    });
 
     res.status(201).json({
       status: 'success',
@@ -44,7 +74,7 @@ exports.createAd = async (req, res, next) => {
   } catch (err) {
     res.status(500).json({
       status: 'fail',
-      message: 'something went wrong',
+      message: err.message,
     });
   }
 };
