@@ -3,16 +3,18 @@ const router = express.Router();
 const adController = require('../controllers/adController');
 const multer = require('multer');
 
+// Upload Photo
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log(req);
-    cb(null, `public/photos/`);
+    cb(null, `public/photos`);
   },
   filename: (req, file, cb) => {
-    cb(null, `${file.originalname}`);
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 const upload = multer({ storage });
+
+// Routes
 router
   .route('/')
   .get(adController.getAllAd)

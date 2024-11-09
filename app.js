@@ -1,5 +1,7 @@
 const express = require('express');
 const adsRiutes = require('./routes/adsRoutes');
+const userRoutes = require('./routes/userRoutes');
+const bodyParser = require('body-parser');
 
 const app = express();
 
@@ -7,6 +9,8 @@ const app = express();
 
 // --JASONPARSER
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // --CORS policy
 app.use((req, res, next) => {
@@ -17,6 +21,7 @@ app.use((req, res, next) => {
 });
 // --Routes
 app.use('/api/ads/', adsRiutes);
+app.use('/api/users/', userRoutes);
 
 // ---404 ERROR (NOT FOUND ROUT) => EXIST IN REACT APP
 app.all('*', (req, res, next) => {
