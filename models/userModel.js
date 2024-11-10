@@ -80,6 +80,22 @@ userSchema.methods.checkChangePassAfter = async function (jwtExpireTime) {
   return false;
 };
 
+// create random password token for forgetful user :)
+userSchema.methods.createPasswordReseteToken = async function () {
+  // create random pass token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // set expire time for that token
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

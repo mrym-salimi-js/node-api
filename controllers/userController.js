@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
+const { sendEmail } = require('../utils/email');
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
@@ -102,7 +103,77 @@ exports.protect = async (req, res, next) => {
   }
 };
 
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    try {
+      console.log(roles);
+      if (!roles.includes(req.user.role)) {
+        throw new Error('شما دسترسی ندارید');
+      }
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
+};
+
+exports.forgetPassword = async (req, res, next) => {
+  // 1. find user email in db
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    throw new Error('کاربری با این ایمیل یافت نشد');
+  }
+  // 2. create random pass token and save it in db
+  const resetToken = await user.createPasswordReseteToken();
+
+  // * validateBeforeSave use for stop all schema validation because of stop all required filed before seving reset pass token in db
+  user.save({ validateBeforeSave: false });
+
+  // 3. send that pass to user
+  const resetPassTokenUrl = `${req.protocol}://${req.get('host')}/api/users/resetePassword/${resetToken}`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject:
+        '(این رمز پس از 10 دقیقه منقضی خواهد شد) یک رمز عبور موقت برایتان ایجاد شده است',
+      message: `رمز عبور خود را فراموش کرده ای؟ رمز عبور جدید خود را از طریق نشانی زیر ارسال کنید:\n ${resetPassTokenUrl}.\n درصوزتی که رمز عبورتان را به خاطر دارید این پیغام را نادیده بگیرید.`,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'رمز عبور موقتی به ایمیل شما ارسال شد',
+    });
+  } catch (error) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(500).json({
+      status: 'fail',
+      message: 'خطایی در ارسال ایمیل رخ داد',
+    });
+  }
+};
+exports.resetPassword = async (req, res, next) => {};
+
 exports.getMyAccount = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+    });
+  } catch (error) {
+    res.status(200).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+exports.getAdminAccount = async (req, res, next) => {
   try {
     res.status(200).json({
       status: 'success',
