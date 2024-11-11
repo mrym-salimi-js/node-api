@@ -15,6 +15,6 @@ router
     userController.getAdminAccount,
   );
 router.route('/forgetPassword').post(userController.forgetPassword);
-router.route('/resetPassword').post(userController.resetPassword);
+router.route('/resetPassword/:token').post(userController.resetPassword);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const User = require('../models/userModel');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
@@ -128,20 +129,21 @@ exports.forgetPassword = async (req, res, next) => {
     throw new Error('کاربری با این ایمیل یافت نشد');
   }
   // 2. create random pass token and save it in db
-  const resetToken = await user.createPasswordReseteToken();
+  const resetToken = user.createPasswordResetToken();
 
   // * validateBeforeSave use for stop all schema validation because of stop all required filed before seving reset pass token in db
-  user.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
 
   // 3. send that pass to user
-  const resetPassTokenUrl = `${req.protocol}://${req.get('host')}/api/users/resetePassword/${resetToken}`;
 
   try {
+    const resetPassTokenUrl = `${req.protocol}://${req.get('host')}/api/users/resetPassword/${resetToken}`;
+
     await sendEmail({
       email: user.email,
       subject:
         '(این رمز پس از 10 دقیقه منقضی خواهد شد) یک رمز عبور موقت برایتان ایجاد شده است',
-      message: `رمز عبور خود را فراموش کرده ای؟ رمز عبور جدید خود را از طریق نشانی زیر ارسال کنید:\n ${resetPassTokenUrl}.\n درصوزتی که رمز عبورتان را به خاطر دارید این پیغام را نادیده بگیرید.`,
+      message: `رمز عبور خود را فراموش کرده ای؟ رمز عبور جدید خود را از طریق نشانی زیر ارسال کنید:\n ${resetPassTokenUrl}\n درصوزتی که رمز عبورتان را به خاطر دارید این پیغام را نادیده بگیرید.`,
     });
 
     res.status(200).json({
@@ -159,7 +161,50 @@ exports.forgetPassword = async (req, res, next) => {
     });
   }
 };
-exports.resetPassword = async (req, res, next) => {};
+exports.resetPassword = async (req, res, next) => {
+  try {
+    // 1. get user token and check expire of token, if not expired set new password for user
+    const hashedTpken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: hashedTpken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new Error('رمز عبور موقتی وجود ندارد یا منقضی شده');
+    }
+
+    // 2. set new password for user
+
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    // 3. update passwordChangedAt
+
+    // create step 3 in userModle by automatically way with pre middleware
+
+    // 4. set token (JWT)
+
+    const token = await signJwt(user._id);
+
+    res.status(200).json({
+      status: 'success',
+      token,
+    });
+  } catch (error) {
+    res.status(401).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
 
 exports.getMyAccount = async (req, res, next) => {
   try {

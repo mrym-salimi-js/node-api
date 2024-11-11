@@ -81,7 +81,7 @@ userSchema.methods.checkChangePassAfter = async function (jwtExpireTime) {
 };
 
 // create random password token for forgetful user :)
-userSchema.methods.createPasswordReseteToken = async function () {
+userSchema.methods.createPasswordResetToken = function () {
   // create random pass token
   const resetToken = crypto.randomBytes(32).toString('hex');
 
@@ -96,6 +96,14 @@ userSchema.methods.createPasswordReseteToken = async function () {
   return resetToken;
 };
 
+// insert value of passwordChangedAt after changing pass automatically
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') && this.isNew) return next();
+  // * add -1000 because of passwordChangedAt can be update after set Token (JWT) for intenet slow speed
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
