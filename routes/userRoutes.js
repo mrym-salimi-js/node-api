@@ -16,5 +16,11 @@ router
   );
 router.route('/forgetPassword').post(userController.forgetPassword);
 router.route('/resetPassword/:token').post(userController.resetPassword);
+router
+  .route('/updateMyPassword')
+  .patch(userController.protect, userController.updateMyPassword);
+router
+  .route('/updateMe')
+  .patch(userController.protect, userController.updateMe);
 
 module.exports = router;

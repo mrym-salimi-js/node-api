@@ -8,6 +8,15 @@ const signJwt = async (id) => {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
   });
 };
+const createSendToken = async (user, statusCode, res) => {
+  const token = await signJwt(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token: token,
+    data: user,
+  });
+};
 exports.register = async (req, res, next) => {
   try {
     const newUser = await User.create({
@@ -17,13 +26,7 @@ exports.register = async (req, res, next) => {
       passwordConfirm: req.body.passwordConfirm,
     });
 
-    const token = await signJwt(newUser._id);
-
-    res.status(200).json({
-      status: 'success',
-      token: token,
-      data: newUser,
-    });
+    await createSendToken(newUser, 201, res);
   } catch (error) {
     res.status(500).json({
       status: 'fail',
@@ -46,13 +49,7 @@ exports.login = async (req, res, next) => {
       throw new Error('رمز عبور وارد شده صحیح نمی باشد');
     }
 
-    const token = await signJwt(user._id);
-
-    res.status(200).json({
-      status: 'success',
-      token: token,
-      message: user,
-    });
+    await createSendToken(user, 200, res);
   } catch (error) {
     res.status(500).json({
       status: 'fail',
@@ -85,7 +82,7 @@ exports.protect = async (req, res, next) => {
     const checkedUser = await User.findOne({ _id: decoded.id });
 
     if (!checkedUser) {
-      throw new Error('the token structure is not correct');
+      throw new Error('رمز عبور وارد شده صحیح نمی باشد');
     }
 
     // 4. Check if user changed password after the token was issued
@@ -191,13 +188,7 @@ exports.resetPassword = async (req, res, next) => {
     // create step 3 in userModle by automatically way with pre middleware
 
     // 4. set token (JWT)
-
-    const token = await signJwt(user._id);
-
-    res.status(200).json({
-      status: 'success',
-      token,
-    });
+    await createSendToken(user, 200, res);
   } catch (error) {
     res.status(401).json({
       status: 'fail',
@@ -206,6 +197,80 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
+exports.updateMyPassword = async (req, res, next) => {
+  try {
+    // 1. get user from db by id
+    const user = await User.findById(req.user.id).select('+password'); // req.user come in from protect step
+
+    // 2. check similarity of entered pass and db pass
+    const comparedPasses = await user.comparePassword(
+      req.body.passwordCurrent,
+      user.password,
+    );
+    if (!comparedPasses) {
+      throw new Error('رمز عبور فعلی اشتباه است');
+    }
+    // 3. update pass
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'رمز عبور با موفقیت تغییر کرد',
+    });
+    // 4. set token (JWT)
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
+exports.updateMe = async (req, res, next) => {
+  try {
+    // 1. check the req dose not includ pass or if includ say update pass url
+    if (req.body.password || req.body.passwordConfirm) {
+      throw new Error(
+        'این نشانی برای تغییر رمز عبور نیست، برای تغییر رمز عبور به آدرس /upadteMyPassword مراجعه کنید',
+      );
+    }
+    // 2. update user
+    const filterObj = async (obj, ...filterItems) => {
+      const newObj = {};
+      Object.keys(obj).forEach((item) => {
+        if (filterItems.includes(item)) {
+          newObj[item] = obj[item];
+        }
+      });
+
+      return newObj;
+    };
+
+    const filteredBodyIltem = await filterObj(req.body, 'name', 'email');
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      filteredBodyIltem,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
 exports.getMyAccount = async (req, res, next) => {
   try {
     res.status(200).json({
