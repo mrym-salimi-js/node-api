@@ -271,6 +271,23 @@ exports.updateMe = async (req, res, next) => {
     });
   }
 };
+
+exports.deleteMe = async (req, res, next) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { active: false });
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
 exports.getMyAccount = async (req, res, next) => {
   try {
     res.status(200).json({

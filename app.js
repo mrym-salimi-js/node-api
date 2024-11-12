@@ -2,14 +2,31 @@ const express = require('express');
 const adsRiutes = require('./routes/adsRoutes');
 const userRoutes = require('./routes/userRoutes');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const app = express();
 
 // MIDDLEWARE:
 
-// --JASONPARSER
+//--RATE LIMITING (set a limite fir login => each 1 minuste can try 5 times)
+
+const limiter = rateLimit({
+  max: 5,
+  windowMs: 60 * 1000,
+  message:
+    'تعداد تلاش برای ورود بیش از اندازه مجاز است، لطفا دقایقی دیگر مجددا تلاش منید',
+});
+
+app.use('/api/users/login', limiter);
+
+// --HTTP RESPONSE HEADERS
+app.use(helmet());
+
+// --JASONPARSER (read the data from req.body)
 app.use(express.json());
 app.use(bodyParser.json());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // --CORS policy

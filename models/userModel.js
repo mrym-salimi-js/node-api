@@ -97,7 +97,6 @@ userSchema.methods.createPasswordResetToken = function () {
 };
 
 // insert value of passwordChangedAt after changing pass automatically
-
 userSchema.pre('save', function (next) {
   if (!this.isModified('password') && this.isNew) return next();
   // * add -1000 because of passwordChangedAt can be update after set Token (JWT) for intenet slow speed
