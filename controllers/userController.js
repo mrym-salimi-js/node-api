@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email');
+const fs = require('fs');
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
@@ -30,7 +31,9 @@ exports.register = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({
       status: 'fail',
-      message: error.message,
+      message: error.message.startsWith('E11000')
+        ? 'نشانی ایمیل تکراری می باشد'
+        : error.message,
     });
   }
 };
@@ -134,27 +137,27 @@ exports.forgetPassword = async (req, res, next) => {
   // 3. send that pass to user
 
   try {
-    const resetPassTokenUrl = `${req.protocol}://${req.get('host')}/api/users/resetPassword/${resetToken}`;
-
     await sendEmail({
       email: user.email,
       subject:
-        '(این رمز پس از 10 دقیقه منقضی خواهد شد) یک رمز عبور موقت برایتان ایجاد شده است',
-      message: `رمز عبور خود را فراموش کرده ای؟ رمز عبور جدید خود را از طریق نشانی زیر ارسال کنید:\n ${resetPassTokenUrl}\n درصوزتی که رمز عبورتان را به خاطر دارید این پیغام را نادیده بگیرید.`,
+        '(این رمز پس از 10 دقیقه منقضی خواهد شد) یک رمز موقت برایتان ایجاد شده است',
+      url: `http://localhost:5173/resetPassword/${resetToken}`,
     });
 
     res.status(200).json({
       status: 'success',
-      message: 'رمز عبور موقتی به ایمیل شما ارسال شد',
+      message:
+        'ایمیلی از طرف شیپورچی جهت بازسازی رمز عبور برایتان ارسال شده است',
     });
   } catch (error) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
+    console.log(htmlEmail);
     res.status(500).json({
       status: 'fail',
-      message: 'خطایی در ارسال ایمیل رخ داد',
+      message: error.message,
     });
   }
 };

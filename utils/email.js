@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+
+const fs = require('fs');
 exports.sendEmail = async (options) => {
   // 1. create a transpoter
   const transporter = nodemailer.createTransport({
@@ -10,12 +12,19 @@ exports.sendEmail = async (options) => {
     },
   });
 
-  // 2. define email option
+  const htmlEmail = fs.readFileSync(
+    `C:/Users/A/Desktop/node-api/views/email/forgetPassEmailMsg.html`,
+    'utf8',
+  );
+
+  const finalHtmlEmail = htmlEmail.replace('{{resetPassLink}}', options.url);
+  // console.log(x);
   const mailOptions = {
     from: 'sheyporchi <sandbox.smtp.mailtrap.io>',
     to: options.email,
     subject: options.subject,
-    text: options.message,
+    // text: options.message,
+    html: finalHtmlEmail,
   };
 
   // 3. send email
