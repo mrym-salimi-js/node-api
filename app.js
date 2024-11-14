@@ -1,11 +1,18 @@
 const express = require('express');
 const adsRiutes = require('./routes/adsRoutes');
 const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-
+const cors = require('cors');
 const app = express();
+
+// app.use(
+//   cors({
+//     origin: ['http://127.0.0.1:5173'],
+//   }),
+// );
 
 // MIDDLEWARE:
 
@@ -39,6 +46,7 @@ app.use((req, res, next) => {
 // --Routes
 app.use('/api/ads/', adsRiutes);
 app.use('/api/users/', userRoutes);
+app.use('/api/chat/', chatRoutes);
 
 // ---404 ERROR (NOT FOUND ROUT) => EXIST IN REACT APP
 app.all('*', (req, res, next) => {

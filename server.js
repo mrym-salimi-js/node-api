@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 const app = require('./app');
+const { Server } = require('socket.io');
+
+const Chat = require('./models/chatModel');
 
 // Database connection with mongoose
 const dbUri = process.env.DATABASE.replace(
@@ -13,6 +16,31 @@ mongoose.connect(dbUri).then(console.log('connect to database'));
 
 // Server connection
 const port = process.env.PORT;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App is running on port ${port}`);
+});
+
+// Socket Connection
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+io.on('connection', (socket) => {
+  socket.on('sendMessage', async ({ chatId, senderId, reciverId, message }) => {
+    const chat = new Chat({
+      chatId: chatId,
+      senderId: senderId,
+      reciverId: reciverId,
+      message: message,
+    });
+    await chat.save();
+
+    // socket.emit('message', { chatId, senderId, reciverId, message });
+    socket.broadcast.emit('message', { chatId, senderId, reciverId, message });
+  });
+  socket.on('disconnect', () => {
+    // console.log('Client disconnected');
+  });
 });
