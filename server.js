@@ -28,17 +28,19 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-  socket.on('sendMessage', async ({ chatId, senderId, reciverId, message }) => {
+  socket.on('sendMessage', async ({ adId, senderId, reciverId, message }) => {
     const chat = new Chat({
-      chatId: chatId,
+      adId: adId,
       senderId: senderId,
       reciverId: reciverId,
       message: message,
     });
+
+    if (!message) return;
     await chat.save();
 
     // socket.emit('message', { chatId, senderId, reciverId, message });
-    socket.broadcast.emit('message', { chatId, senderId, reciverId, message });
+    socket.broadcast.emit('message', { adId, senderId, reciverId, message });
   });
   socket.on('disconnect', () => {
     // console.log('Client disconnected');

@@ -82,7 +82,9 @@ exports.protect = async (req, res, next) => {
     );
 
     // 3. check exist still user
-    const checkedUser = await User.findOne({ _id: decoded.id });
+    const checkedUser = await User.findOne({ _id: decoded.id }).select(
+      '+password',
+    );
 
     if (!checkedUser) {
       throw new Error('رمز عبور وارد شده صحیح نمی باشد');
@@ -94,6 +96,7 @@ exports.protect = async (req, res, next) => {
     }
 
     req.user = checkedUser;
+    // console.log(req.user);
 
     next();
   } catch (error) {
@@ -107,7 +110,7 @@ exports.protect = async (req, res, next) => {
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     try {
-      console.log(roles);
+      // console.log(roles);
       if (!roles.includes(req.user.role)) {
         throw new Error('شما دسترسی ندارید');
       }
@@ -154,7 +157,7 @@ exports.forgetPassword = async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    console.log(htmlEmail);
+    // console.log(htmlEmail);
     res.status(500).json({
       status: 'fail',
       message: error.message,
