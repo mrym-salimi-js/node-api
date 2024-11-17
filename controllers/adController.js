@@ -1,4 +1,6 @@
 const Ad = require('../models/adModel');
+const path = require('path');
+const fs = require('fs-extra');
 
 exports.getAllAd = async (req, res, next) => {
   try {
@@ -46,6 +48,7 @@ exports.createAd = async (req, res, next) => {
       phone,
       chat,
     } = req.body;
+
     photo = photo && JSON.parse(photo);
     category = category && JSON.parse(category);
     attribute = JSON.parse(attribute);
@@ -66,6 +69,18 @@ exports.createAd = async (req, res, next) => {
       phone,
       chat,
     });
+
+    if (newAd && newAd.photo.length > 0) {
+      newAd.photo.map((p) => {
+        const sourcePath = path.join(__dirname, `../public/temp/`, p.name);
+        const destPath = path.join(
+          __dirname,
+          `../public/img/${newAd._id.toString()}`,
+          p.name,
+        );
+        fs.move(sourcePath, destPath);
+      });
+    }
 
     res.status(201).json({
       status: 'success',

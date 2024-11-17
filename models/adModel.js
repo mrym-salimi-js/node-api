@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const adController = require('../controllers/adController');
 
 const adSchema = new mongoose.Schema({
   title: String,

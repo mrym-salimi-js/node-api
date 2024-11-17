@@ -20,6 +20,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.1",
+    "fs-extra": "^11.2.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "kavenegar": "^1.1.4",

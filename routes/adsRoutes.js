@@ -2,14 +2,18 @@ const express = require('express');
 const router = express.Router();
 const adController = require('../controllers/adController');
 const multer = require('multer');
+const fs = require('fs-extra');
 
 // Upload Photo
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, `public/photos`);
+  destination: async (req, file, cb) => {
+    // const fName = file.originalname.split('.')[0];
+    // const tempPath = `public/temp/${file.originalname}`;
+    // await fs.ensureDir(tempPath);
+    cb(null, 'public/temp');
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    cb(null, `${file.originalname}`);
   },
 });
 const upload = multer({ storage });
