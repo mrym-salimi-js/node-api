@@ -4,6 +4,7 @@ const http = require('http');
 const Chat = require('../models/chatModel');
 const Ad = require('../models/adModel');
 const User = require('../models/userModel');
+const { ObjectId } = require('mongodb');
 
 exports.chatMessage = async (req, res, next) => {
   const server = http.createServer(app);
@@ -46,7 +47,9 @@ exports.getContactsList = async (req, res, next) => {
 
     let adInfoForChat;
     if (myChat[0].senderId.toString() === req.user.id) {
-      const messagesByAdId = await Ad.find({ _id: { $in: adIds } });
+      const messagesByAdId = await Ad.find({
+        _id: { $in: adIds },
+      });
       if (!messagesByAdId) return;
 
       adInfoForChat = {
@@ -55,6 +58,7 @@ exports.getContactsList = async (req, res, next) => {
         photo: messagesByAdId[0]?.photo,
       };
     }
+
     if (myChat[0].reciverId.toString() === req.user.id) {
       const senderInfo = await User.find({
         _id: myChat[0].senderId.toString(),
@@ -67,7 +71,6 @@ exports.getContactsList = async (req, res, next) => {
       };
     }
 
-    // console.log(adInfoForChat);
     res.status(200).json({
       status: 'success',
       resault: adInfoForChat.length,

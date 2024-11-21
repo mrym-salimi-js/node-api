@@ -7,12 +7,9 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
+const path = require('path');
 
-// app.use(
-//   cors({
-//     origin: ['http://127.0.0.1:5173'],
-//   }),
-// );
+app.use(cors());
 
 // MIDDLEWARE:
 
@@ -43,10 +40,14 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
+
+// Static Route
+app.use(express.static(path.join(__dirname, 'public')));
 // --Routes
 app.use('/api/ads/', adsRiutes);
 app.use('/api/users/', userRoutes);
 app.use('/api/chat/', chatRoutes);
+// app.use('/download/',)
 
 // ---404 ERROR (NOT FOUND ROUT) => EXIST IN REACT APP
 app.all('*', (req, res, next) => {

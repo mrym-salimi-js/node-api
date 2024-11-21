@@ -18,6 +18,8 @@ const userChat = new mongoose.Schema({
     type: String,
     require: true,
   },
+  type: String,
+  size: Number,
   createAd: {
     type: Number,
     default: () => {
