@@ -56,6 +56,7 @@ exports.getContactsList = async (req, res, next) => {
         adId: messagesByAdId[0]?.id,
         adName: messagesByAdId[0]?.title,
         photo: messagesByAdId[0]?.photo,
+        createAd: messagesByAdId[0]?.createAd,
       };
     }
 
@@ -67,6 +68,7 @@ exports.getContactsList = async (req, res, next) => {
       adInfoForChat = {
         adId: senderInfo[0]?.id,
         adName: senderInfo[0]?.name,
+        createAd: senderInfo[0]?.createAd,
         photo: [],
       };
     }
