@@ -3,7 +3,7 @@ const adController = require('../controllers/adController');
 
 const adSchema = new mongoose.Schema({
   title: String,
-  descrioption: String,
+  description: String,
   photo: [
     {
       id: Number,

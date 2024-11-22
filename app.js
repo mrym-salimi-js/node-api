@@ -9,9 +9,19 @@ const cors = require('cors');
 const app = express();
 const path = require('path');
 
-app.use(cors());
-
 // MIDDLEWARE:
+
+// --CORS policy
+app.use(cors());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization,Origin, X-Requested-With, Accept',
+  );
+  next();
+});
 
 //--RATE LIMITING (set a limite fir login => each 1 minuste can try 5 times)
 
@@ -25,21 +35,17 @@ const limiter = rateLimit({
 app.use('/api/users/login', limiter);
 
 // --HTTP RESPONSE HEADERS
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+);
 
 // --JASONPARSER (read the data from req.body)
 app.use(express.json());
 app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// --CORS policy
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
 
 // Static Route
 app.use(express.static(path.join(__dirname, 'public')));
