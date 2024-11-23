@@ -33,7 +33,7 @@ const adSchema = new mongoose.Schema({
       lableId: Number,
     },
   ],
-
+  userId: mongoose.Schema.Types.ObjectId,
   userType: String,
   phone: Boolean,
   chat: Boolean,

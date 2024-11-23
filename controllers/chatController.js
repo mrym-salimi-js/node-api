@@ -45,19 +45,22 @@ exports.getContactsList = async (req, res, next) => {
 
     if (!myChat) return;
 
-    let adInfoForChat;
+    let adInfoForChat = [];
     if (myChat[0].senderId.toString() === req.user.id) {
       const messagesByAdId = await Ad.find({
         _id: { $in: adIds },
       });
+
       if (!messagesByAdId) return;
 
-      adInfoForChat = {
-        adId: messagesByAdId[0]?.id,
-        adName: messagesByAdId[0]?.title,
-        photo: messagesByAdId[0]?.photo,
-        createAd: messagesByAdId[0]?.createAd,
-      };
+      messagesByAdId.map((msg) => {
+        adInfoForChat.push({
+          adId: msg?.id,
+          adName: msg?.title,
+          photo: msg?.photo,
+          createAd: msg?.createAd,
+        });
+      });
     }
 
     if (myChat[0].reciverId.toString() === req.user.id) {
@@ -65,12 +68,14 @@ exports.getContactsList = async (req, res, next) => {
         _id: myChat[0].senderId.toString(),
       });
 
-      adInfoForChat = {
-        adId: senderInfo[0]?.id,
-        adName: senderInfo[0]?.name,
-        createAd: senderInfo[0]?.createAd,
-        photo: [],
-      };
+      senderInfo.map((msg) => {
+        adInfoForChat.push({
+          adId: msg?.id,
+          adName: msg?.title,
+          photo: msg?.photo,
+          createAd: msg?.createAd,
+        });
+      });
     }
 
     res.status(200).json({
@@ -98,9 +103,17 @@ exports.getChatMessages = async (req, res, next) => {
     if (!messages) return;
     data.message = messages;
 
+    if (messages[0].senderId.toString() === req.user.id) {
+      const senderInfo = await Ad.find({ _id: messages[0].adId });
+      senderInfo && (data.contact = senderInfo);
+    }
+
     if (messages[0].reciverId.toString() === req.user.id) {
       const selectedAd = await Ad.find({ _id: req.params.adId });
       selectedAd && (data.ad = selectedAd);
+
+      const senderInfo = await User.find({ _id: messages[0].reciverId });
+      senderInfo && (data.contact = senderInfo);
     }
 
     res.status(200).json({
