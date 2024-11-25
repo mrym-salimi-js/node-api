@@ -22,9 +22,14 @@ const adSchema = new mongoose.Schema({
       id: Number,
       name: String,
       slug: String,
-      coordinates: [Number],
+      lat: String,
+      lon: String,
     },
   ],
+  coordinate: {
+    lat: Number,
+    lon: Number,
+  },
   attribute: [
     {
       id: Number,
@@ -33,7 +38,7 @@ const adSchema = new mongoose.Schema({
       lableId: Number,
     },
   ],
-  userId: mongoose.Schema.Types.ObjectId,
+  userId: String,
   userType: String,
   phone: Boolean,
   chat: Boolean,

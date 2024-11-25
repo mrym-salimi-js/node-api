@@ -1,6 +1,8 @@
 const Ad = require('../models/adModel');
 const path = require('path');
 const fs = require('fs-extra');
+const { error } = require('console');
+const User = require('../models/userModel');
 
 exports.getAllAd = async (req, res, next) => {
   try {
@@ -20,16 +22,20 @@ exports.getAllAd = async (req, res, next) => {
 
 exports.getAd = async (req, res, next) => {
   try {
-    const allAd = await Ad.findById(req.params.id);
+    const ad = await Ad.findById(req.params.id);
+
+    if (!ad) return;
+    const adCreator = await User.findById(ad.userId);
 
     res.status(200).json({
       status: 'success',
-      data: allAd,
+      data: ad,
+      adCreator: adCreator,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(404).json({
       status: 'fail',
-      message: 'data not found',
+      message: error.message,
     });
   }
 };
@@ -47,6 +53,7 @@ exports.createAd = async (req, res, next) => {
       userType,
       phone,
       chat,
+      userId,
     } = req.body;
 
     photo = photo && JSON.parse(photo);
@@ -68,6 +75,7 @@ exports.createAd = async (req, res, next) => {
       userType,
       phone,
       chat,
+      userId,
     });
 
     if (newAd && newAd.photo.length > 0) {

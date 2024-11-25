@@ -103,17 +103,9 @@ exports.getChatMessages = async (req, res, next) => {
     if (!messages) return;
     data.message = messages;
 
-    if (messages[0].senderId.toString() === req.user.id) {
-      const senderInfo = await Ad.find({ _id: messages[0].adId });
-      senderInfo && (data.contact = senderInfo);
-    }
-
     if (messages[0].reciverId.toString() === req.user.id) {
       const selectedAd = await Ad.find({ _id: req.params.adId });
       selectedAd && (data.ad = selectedAd);
-
-      const senderInfo = await User.find({ _id: messages[0].reciverId });
-      senderInfo && (data.contact = senderInfo);
     }
 
     res.status(200).json({
