@@ -156,8 +156,8 @@ exports.getAdsByCategory = async (req, res, next) => {
       req.query.o === 'ny' && (sortOptions = { createAd: 1 });
       req.query.o === 'hp' && (sortOptions = { createAd: 1 });
     }
-
     let aQueries = [];
+
     for (const queryKey in req.query) {
       if (queryKey.startsWith('a')) {
         aQueries.push(req.query[queryKey]);
@@ -165,6 +165,7 @@ exports.getAdsByCategory = async (req, res, next) => {
     }
 
     let ads = [];
+
     const category = await Ad.find({
       category: { $elemMatch: { slug: req.params.category } },
     });
@@ -196,10 +197,9 @@ exports.getAdsByCategory = async (req, res, next) => {
         const aQuery = [];
         ads.find((item) => {
           item.attribute?.find((attrItem) => {
-            if (queries[queryKey] === attrItem.lableId) {
+            if (parseInt(queries[queryKey]) === attrItem.lableId) {
               aQuery.push(item);
             }
-            console.log(queries[queryKey] === attrItem.lableId);
           });
         });
 
@@ -212,7 +212,9 @@ exports.getAdsByCategory = async (req, res, next) => {
         ads.find((adItem) => {
           adItem.attribute?.find((attrItem) => {
             if (
-              attrItem.id == queryKey.split(/[mx]/g).join('') &&
+              (attrItem.id == queryKey.split(/[mx|a]/g).join('') ||
+                (queryKey.split(/[mx|a]/g).join('') == 'p' &&
+                  attrItem.id == 1)) &&
               attrItem.lable <= parseInt(queries[queryKey])
             ) {
               mxQuery.push(adItem);
@@ -229,7 +231,9 @@ exports.getAdsByCategory = async (req, res, next) => {
         ads.find((adItem) => {
           adItem.attribute?.find((attrItem) => {
             if (
-              attrItem.id == queryKey.split(/[mn]/g).join('') &&
+              (attrItem.id == queryKey.split(/[mn|a]/g).join('') ||
+                (queryKey.split(/[mn|a]/g).join('') == 'p' &&
+                  attrItem.id == 1)) &&
               attrItem.lable >= parseInt(queries[queryKey])
             ) {
               mnQuery.push(adItem);
