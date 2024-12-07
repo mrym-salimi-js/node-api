@@ -4,6 +4,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon server.js",
+    "build": "nodemon server.js",
     "debug": "ndb server.js"
   },
   "author": "maryam salimi",
