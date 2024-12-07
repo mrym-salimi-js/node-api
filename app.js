@@ -53,6 +53,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/ads/', adsRiutes);
 app.use('/api/users/', userRoutes);
 app.use('/api/chat/', chatRoutes);
+app.use('/', adsRiutes);
 // app.use('/download/',)
 
 // ---404 ERROR (NOT FOUND ROUT) => EXIST IN REACT APP
