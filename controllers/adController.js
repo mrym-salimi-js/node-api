@@ -6,11 +6,19 @@ const User = require('../models/userModel');
 
 exports.getAllAd = async (req, res, next) => {
   try {
-    const allAd = await Ad.find();
+    let ads;
+    if (req.query.cities !== undefined) {
+      const cities = JSON.parse(decodeURIComponent(req.query.cities));
+      ads = await Ad.find({
+        location: { $elemMatch: { id: { $in: cities } } },
+      });
+    } else {
+      ads = await Ad.find();
+    }
     res.status(200).json({
       status: 'success',
-      result: allAd.length,
-      data: allAd,
+      result: ads.length,
+      data: ads,
     });
   } catch (err) {
     res.status(404).json({
@@ -137,6 +145,20 @@ exports.updateAd = async (req, res, next) => {
   }
 };
 
+// exports.getAdsByLocations = async (req, res, next) => {
+//   try {
+
+//     res.status(200).json({
+//       status: 'success',
+//       message: ad,
+//     });
+//   } catch (error) {
+//     res.status(404).json({
+//       status: 'fail',
+//       message: 'data not found',
+//     });
+//   }
+// };
 exports.getAdsByCategory = async (req, res, next) => {
   try {
     if (req.query.o !== undefined) {
