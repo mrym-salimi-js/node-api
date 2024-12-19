@@ -58,6 +58,7 @@ exports.getContactsList = async (req, res, next) => {
           adId: msg?.id,
           adName: msg?.title,
           photo: msg?.photo,
+          photoPath: 'img',
           createAd: msg?.createAd,
         });
       });
@@ -73,6 +74,7 @@ exports.getContactsList = async (req, res, next) => {
           adId: msg?.id,
           adName: msg?.title,
           photo: msg?.photo,
+          photoPath: 'user',
           createAd: msg?.createAd,
         });
       });

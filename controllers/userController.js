@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const User = require('../models/userModel');
-const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email');
 const fs = require('fs');
@@ -12,11 +11,31 @@ const signJwt = async (id) => {
 const createSendToken = async (user, statusCode, res) => {
   const token = await signJwt(user._id);
 
+  res.cookie('user-token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+  });
+
   res.status(statusCode).json({
     status: 'success',
     token: token,
     data: user,
   });
+};
+
+exports.ckeckAuth = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+      data: req.user,
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'User not found',
+    });
+  }
 };
 exports.register = async (req, res, next) => {
   try {
@@ -63,23 +82,17 @@ exports.login = async (req, res, next) => {
 
 exports.protect = async (req, res, next) => {
   try {
-    // 1. check exist tocken by header authorization
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
+    // 1. check exist tocken by get token cookie in credatials item in req
+    const token = req.cookies['user-token'];
+
     if (!token) {
-      throw new Error('شما لاگین نیستید');
+      return res.status(500).json({
+        status: 'fail',
+      });
     }
 
     // 2. check structure of token (verification)
-    const decoded = await promisify(jwt.verify)(
-      token,
-      process.env.JWT_SECRET_KEY,
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     // 3. check exist still user
     const checkedUser = await User.findOne({ _id: decoded.id }).select(
@@ -318,17 +331,6 @@ exports.getAdminAccount = async (req, res, next) => {
     });
   }
 };
-exports.getUser = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.status(200).json({
-      status: 'success',
-      data: user,
-    });
-  } catch (error) {
-    res.status(404).json({
-      status: 'fail',
-      message: 'User not found',
-    });
-  }
-};
+// exports.getUser = async (req, res, next) => {
+
+// };

@@ -26,6 +26,9 @@ router
   .route('/deleteMe')
   .delete(userController.protect, userController.deleteMe);
 
-router.route('/:id').get(userController.getUser);
+// router.route('/:id').get(userController.getUser);
+router
+  .route('/checkAuth')
+  .get(userController.protect, userController.ckeckAuth);
 
 module.exports = router;

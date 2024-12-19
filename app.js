@@ -8,20 +8,26 @@ const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 // MIDDLEWARE:
 
 // --CORS policy
-app.use(cors());
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization,Origin, X-Requested-With, Accept',
-  );
-  next();
-});
+app.use(cookieParser());
+const corsOptions = {
+  origin: 'http://localhost:5173', // Replace with your client URL
+  credentials: true, // Allow cookies to be sent from the client
+};
+app.use(cors(corsOptions));
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//   res.header(
+//     'Access-Control-Allow-Headers',
+//     'Content-Type, Authorization,Origin, X-Requested-With, Accept',
+//   );
+//   next();
+// });
 
 //--RATE LIMITING (set a limite fir login => each 1 minuste can try 5 times)
 
