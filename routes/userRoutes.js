@@ -30,5 +30,8 @@ router
 router
   .route('/checkAuth')
   .get(userController.protect, userController.ckeckAuth);
+router
+  .route('/myAds')
+  .get(userController.protect, userController.getAdsByCreator);
 
 module.exports = router;

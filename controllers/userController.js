@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email');
 const fs = require('fs');
+const Ad = require('../models/adModel');
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
@@ -88,6 +89,7 @@ exports.protect = async (req, res, next) => {
     if (!token) {
       return res.status(500).json({
         status: 'fail',
+        message: 'توکنی یافت نشد',
       });
     }
 
@@ -331,6 +333,20 @@ exports.getAdminAccount = async (req, res, next) => {
     });
   }
 };
-// exports.getUser = async (req, res, next) => {
+exports.getAdsByCreator = async (req, res, next) => {
+  try {
+    const userId = req.user._id.toString();
 
-// };
+    const ads = await Ad.find({ userId: userId });
+
+    res.status(200).json({
+      status: 'success',
+      data: ads,
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
