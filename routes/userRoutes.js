@@ -4,9 +4,7 @@ const userController = require('../controllers/userController');
 
 router.route('/register').post(userController.register);
 router.route('/login').post(userController.login);
-router
-  .route('/myAccount')
-  .get(userController.protect, userController.getMyAccount);
+router.route('/me').get(userController.protect, userController.getMe);
 router
   .route('/adminAccount')
   .get(
@@ -33,5 +31,8 @@ router
 router
   .route('/myAds')
   .get(userController.protect, userController.getAdsByCreator);
+router
+  .route('/saved/:adId')
+  .get(userController.protect, userController.updateSavedAds);
 
 module.exports = router;

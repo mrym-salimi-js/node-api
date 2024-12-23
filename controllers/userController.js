@@ -309,10 +309,13 @@ exports.deleteMe = async (req, res, next) => {
   }
 };
 
-exports.getMyAccount = async (req, res, next) => {
+exports.getMe = async (req, res, next) => {
   try {
+    const user = await User.findById({ _id: req.user.id });
+
     res.status(200).json({
       status: 'success',
+      data: user,
     });
   } catch (error) {
     res.status(200).json({
@@ -342,6 +345,29 @@ exports.getAdsByCreator = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: ads,
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+exports.updateSavedAds = async (req, res) => {
+  try {
+    const getSavedAd = await User.find({
+      _id: req.user._id,
+      savedAd: { $in: req.params.adId },
+    });
+    const update =
+      getSavedAd.length > 0
+        ? { $pull: { savedAd: req.params.adId } }
+        : { $addToSet: { savedAd: req.params.adId } };
+
+    await User.updateOne({ _id: req.user._id }, update);
+
+    res.status(200).json({
+      status: 'success',
     });
   } catch (error) {
     res.status(404).json({
