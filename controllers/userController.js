@@ -2,8 +2,9 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email');
-const fs = require('fs');
+const fs = require('fs-extra');
 const Ad = require('../models/adModel');
+const path = require('path');
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
@@ -319,6 +320,51 @@ exports.getMe = async (req, res, next) => {
     });
   } catch (error) {
     res.status(200).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+exports.updatePhoto = async (req, res) => {
+  try {
+    const file = req.file;
+    const userId = req.user.id;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { photo: file.originalname },
+      { new: true },
+    );
+
+    if (updatedUser) {
+      const sourcePath = path.join(
+        __dirname,
+        `../public/user/temp`,
+        updatedUser.photo,
+      );
+
+      const destPath = path.join(
+        __dirname,
+        `../public/user/img`,
+        updatedUser.photo,
+      );
+
+      fs.pathExists(destPath)
+        .then((exists) => {
+          if (exists) {
+            fs.remove(destPath);
+            fs.move(sourcePath, destPath);
+          }
+        })
+        .then(() => {
+          return fs.move(sourcePath, destPath);
+        });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(400).json({
       status: 'fail',
       message: error.message,
     });
