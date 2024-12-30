@@ -42,7 +42,7 @@ const adSchema = new mongoose.Schema({
   userType: String,
   phone: Boolean,
   chat: Boolean,
-  createAd: {
+  createAt: {
     type: Number,
     default: () => {
       return new Date();

@@ -20,7 +20,7 @@ const userChat = new mongoose.Schema({
   },
   type: String,
   size: Number,
-  createAd: {
+  createAt: {
     type: Number,
     default: () => {
       return new Date();

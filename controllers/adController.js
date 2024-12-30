@@ -162,13 +162,13 @@ exports.updateAd = async (req, res, next) => {
 exports.getAdsByCategory = async (req, res, next) => {
   try {
     if (req.query.o !== undefined) {
-      req.query.o === 'n' && (sortOptions = { createAd: -1 });
+      req.query.o === 'n' && (sortOptions = { createAt: -1 });
       req.query.o === 'ch' && (sortOptions = { lable: 1 });
-      req.query.o === 'ex' && (sortOptions = { createAd: -1 });
-      req.query.o === 'lp' && (sortOptions = { createAd: -1 });
-      req.query.o === 'oy' && (sortOptions = { createAd: 1 });
-      req.query.o === 'ny' && (sortOptions = { createAd: 1 });
-      req.query.o === 'hp' && (sortOptions = { createAd: 1 });
+      req.query.o === 'ex' && (sortOptions = { createAt: -1 });
+      req.query.o === 'lp' && (sortOptions = { createAt: -1 });
+      req.query.o === 'oy' && (sortOptions = { createAt: 1 });
+      req.query.o === 'ny' && (sortOptions = { createAt: 1 });
+      req.query.o === 'hp' && (sortOptions = { createAt: 1 });
     }
     let aQueries = [];
 

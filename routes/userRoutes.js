@@ -55,5 +55,8 @@ router
 router
   .route('/saved/:adId')
   .get(userController.protect, userController.updateSavedAds);
+router
+  .route('/savedAds')
+  .get(userController.protect, userController.getSavedAds);
 
 module.exports = router;

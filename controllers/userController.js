@@ -390,6 +390,7 @@ exports.getAdsByCreator = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
+      result: ads.length,
       data: ads,
     });
   } catch (error) {
@@ -414,6 +415,21 @@ exports.updateSavedAds = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+exports.getSavedAds = async (req, res) => {
+  try {
+    const savedId = req.user.savedAd;
+    const savedAds = await Ad.find({ _id: { $in: savedId } });
+    res.status(200).json({
+      status: 'success',
+      data: savedAds,
     });
   } catch (error) {
     res.status(404).json({

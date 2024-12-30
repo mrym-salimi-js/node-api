@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
+  createAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // hash password befor save it in db

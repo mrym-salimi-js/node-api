@@ -59,7 +59,7 @@ exports.getContactsList = async (req, res, next) => {
           adName: msg?.title,
           photo: msg?.photo,
           photoPath: 'img',
-          createAd: msg?.createAd,
+          createAt: msg?.createAt,
         });
       });
     }
@@ -75,14 +75,14 @@ exports.getContactsList = async (req, res, next) => {
           adName: msg?.title,
           photo: msg?.photo,
           photoPath: 'user',
-          createAd: msg?.createAd,
+          createAt: msg?.createAt,
         });
       });
     }
 
     res.status(200).json({
       status: 'success',
-      resault: adInfoForChat.length,
+      result: adInfoForChat.length,
       data: adInfoForChat,
     });
   } catch (error) {
