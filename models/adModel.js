@@ -34,13 +34,13 @@ const adSchema = new mongoose.Schema({
     {
       id: Number,
       name: String,
-      lable: String,
-      lableId: Number,
+      label: String,
+      labelId: Number,
     },
   ],
   userId: String,
   userType: String,
-  phone: Boolean,
+  phone: Number,
   chat: Boolean,
   createAt: {
     type: Number,
