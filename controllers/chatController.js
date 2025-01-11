@@ -98,17 +98,42 @@ exports.getChatMessages = async (req, res, next) => {
     let data = {};
 
     const messages = await Chat.find({
-      $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
-      adId: req.params.adId,
+      $or: [
+        { senderId: req.user.id },
+        { reciverId: req.user.id },
+        { adId: req.params.adId },
+      ],
     });
 
     if (!messages) return;
-    data.message = messages;
 
     if (messages[0].reciverId.toString() === req.user.id) {
-      const selectedAd = await Ad.findById(messages[0].adId);
+      const messageForAdCreator = await Chat.find({
+        $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
+        $or: [{ senderId: req.params.adId }, { reciverId: req.params.adId }],
+      });
+      messageForAdCreator && (data.message = messageForAdCreator);
+
+      const adIds = messageForAdCreator.map((i) => {
+        return i.adId;
+      });
+      const editedAdIds = adIds !== undefined && [...new Set(adIds)];
+
+      const selectedAd = await Ad.find({ _id: { $in: editedAdIds } });
+
+      console.log('selectedAd:', selectedAd);
 
       selectedAd !== undefined && (data.ad = selectedAd);
+    }
+
+    if (messages[0].senderId.toString() === req.user.id) {
+      const messageForChatStarter = await Chat.find({
+        $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
+
+        adId: req.params.adId,
+      });
+      // console.log(messages)
+      messageForChatStarter && (data.message = messageForChatStarter);
     }
 
     res.status(200).json({
