@@ -55,11 +55,11 @@ exports.getContactsList = async (req, res, next) => {
 
       messagesByAdId.map((msg) => {
         adInfoForChat.push({
-          adId: msg?.id,
+          chatId: msg?.id,
           adName: msg?.title,
           photo: msg?.photo,
           photoPath: 'img',
-          createAt: msg?.createAt,
+          createAt: myChat[myChat.length - 1]?.createAt,
         });
       });
     }
@@ -71,11 +71,11 @@ exports.getContactsList = async (req, res, next) => {
 
       senderInfo.map((msg) => {
         adInfoForChat.push({
-          adId: msg?.id,
-          adName: msg?.title,
+          chatId: msg?.id,
+          adName: msg?.name,
           photo: msg?.photo,
           photoPath: 'user',
-          createAt: msg?.createAt,
+          createAt: myChat[myChat.length - 1]?.createAt,
         });
       });
     }
@@ -106,8 +106,9 @@ exports.getChatMessages = async (req, res, next) => {
     data.message = messages;
 
     if (messages[0].reciverId.toString() === req.user.id) {
-      const selectedAd = await Ad.find({ _id: req.params.adId });
-      selectedAd && (data.ad = selectedAd);
+      const selectedAd = await Ad.findById(messages[0].adId);
+
+      selectedAd !== undefined && (data.ad = selectedAd);
     }
 
     res.status(200).json({

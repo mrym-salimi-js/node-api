@@ -30,6 +30,7 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
+  // Set Message
   socket.on('sendMessage', async ({ adId, senderId, reciverId, message }) => {
     const chat = new Chat({
       adId: adId,
@@ -46,9 +47,16 @@ io.on('connection', (socket) => {
     // socket.emit('message', { chatId, senderId, reciverId, message });
     socket.broadcast.emit('message', { adId, senderId, reciverId, message });
   });
+
+  // Set File
+
   socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
     // const buffer = Buffer.from(file.file);
-
+    console.log(adId);
+    if (!fileInfo) {
+      console.error('Invalid fileInfo');
+      return;
+    }
     const chat = new Chat({
       adId: adId,
       senderId: senderId,
@@ -57,6 +65,7 @@ io.on('connection', (socket) => {
       type: 'file',
       size: fileInfo.size,
     });
+    if (!fileInfo) return;
 
     await chat.save();
     socket.broadcast.emit('file', { adId, senderId, reciverId, fileInfo });
@@ -77,6 +86,10 @@ io.on('connection', (socket) => {
       console.log('File saved:', filePath);
       socket.emit('upload success', 'File uploaded successfully');
     });
+  });
+
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
   socket.on('disconnect', () => {
     // console.log('Client disconnected');
