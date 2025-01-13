@@ -56,6 +56,7 @@ exports.getContactsList = async (req, res, next) => {
       messagesByAdId.map((msg) => {
         adInfoForChat.push({
           chatId: msg?.id,
+          creatorId: msg?.userId,
           adName: msg?.title,
           photo: msg?.photo,
           photoPath: 'img',
@@ -72,6 +73,7 @@ exports.getContactsList = async (req, res, next) => {
       senderInfo.map((msg) => {
         adInfoForChat.push({
           chatId: msg?.id,
+          // creatorId: msg?.id,
           adName: msg?.name,
           photo: msg?.photo,
           photoPath: 'user',
@@ -120,8 +122,6 @@ exports.getChatMessages = async (req, res, next) => {
       const editedAdIds = adIds !== undefined && [...new Set(adIds)];
 
       const selectedAd = await Ad.find({ _id: { $in: editedAdIds } });
-
-      console.log('selectedAd:', selectedAd);
 
       selectedAd !== undefined && (data.ad = selectedAd);
     }

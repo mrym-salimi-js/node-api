@@ -48,6 +48,16 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
+  status: {
+    type: String,
+    default: 'offline',
+  },
+  lastSeen: {
+    type: Number,
+    default: () => {
+      return new Date();
+    },
+  },
   createAt: {
     type: Date,
     default: Date.now,

@@ -5,6 +5,9 @@ const { sendEmail } = require('../utils/email');
 const fs = require('fs-extra');
 const Ad = require('../models/adModel');
 const path = require('path');
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_TOKEN_EXPIRE,
@@ -82,6 +85,24 @@ exports.login = async (req, res, next) => {
   }
 };
 
+exports.logout = async (req, res) => {
+  const status = 'offline';
+
+  await User.findByIdAndUpdate(req.user.id, {
+    status,
+    lastSeen: new Date(),
+  });
+
+  res.clearCookie('user-token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+};
+
 exports.protect = async (req, res, next) => {
   try {
     // 1. check exist tocken by get token cookie in credatials item in req
@@ -98,9 +119,10 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     // 3. check exist still user
-    const checkedUser = await User.findOne({ _id: decoded.id }).select(
-      '+password',
-    );
+    const id = ObjectId.createFromHexString(decoded.id);
+    const checkedUser = await User.findOne({
+      _id: id,
+    }).select('+password');
 
     if (!checkedUser) {
       throw new Error('رمز عبور وارد شده صحیح نمی باشد');
@@ -112,7 +134,6 @@ exports.protect = async (req, res, next) => {
     }
 
     req.user = checkedUser;
-    // console.log(req.user);
 
     next();
   } catch (error) {
@@ -319,9 +340,26 @@ exports.getMe = async (req, res, next) => {
       data: user,
     });
   } catch (error) {
-    res.status(200).json({
+    res.status(404).json({
       status: 'fail',
       message: error.message,
+    });
+  }
+};
+exports.getUserById = async (req, res, next) => {
+  // console.log(req.params.userId);
+  try {
+    const id = ObjectId.createFromHexString(req.params.userId);
+    const user = await User.findById(id);
+
+    res.status(200).json({
+      status: 'success',
+      data: user,
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'eeeee',
     });
   }
 };
@@ -376,7 +414,7 @@ exports.getAdminAccount = async (req, res, next) => {
       status: 'success',
     });
   } catch (error) {
-    res.status(200).json({
+    res.status(500).json({
       status: 'fail',
       message: error.message,
     });
@@ -402,8 +440,10 @@ exports.getAdsByCreator = async (req, res, next) => {
 };
 exports.updateSavedAds = async (req, res) => {
   try {
+    // console.log(req.user);
+    constid = ObjectId.createFromHexString(req.user.id);
     const getSavedAd = await User.find({
-      _id: req.user._id,
+      _id: id,
       savedAd: { $in: req.params.adId },
     });
     const update =
@@ -411,7 +451,7 @@ exports.updateSavedAds = async (req, res) => {
         ? { $pull: { savedAd: req.params.adId } }
         : { $addToSet: { savedAd: req.params.adId } };
 
-    await User.updateOne({ _id: req.user._id }, update);
+    await User.updateOne({ _id: id }, update);
 
     res.status(200).json({
       status: 'success',
@@ -435,6 +475,26 @@ exports.getSavedAds = async (req, res) => {
     res.status(404).json({
       status: 'fail',
       message: error.message,
+    });
+  }
+};
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const id = ObjectId.createFromHexString(req.user.id);
+
+    const status = 'online';
+    await User.findByIdAndUpdate(id, {
+      status,
+      lastSeen: new Date(),
+    });
+
+    res.status(200).json({
+      status: 'success',
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      data: error.message,
     });
   }
 };

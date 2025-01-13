@@ -18,6 +18,7 @@ const upload = multer({ storage });
 
 router.route('/register').post(userController.register);
 router.route('/login').post(userController.login);
+router.route('/logout').get(userController.protect, userController.logout);
 router.route('/me').get(userController.protect, userController.getMe);
 router
   .route('/adminAccount')
@@ -45,7 +46,9 @@ router
   .route('/deleteMe')
   .delete(userController.protect, userController.deleteMe);
 
-// router.route('/:id').get(userController.getUser);
+router
+  .route('/user/:userId')
+  .get(userController.protect, userController.getUserById);
 router
   .route('/checkAuth')
   .get(userController.protect, userController.ckeckAuth);
@@ -58,5 +61,8 @@ router
 router
   .route('/savedAds')
   .get(userController.protect, userController.getSavedAds);
+router
+  .route('/status')
+  .get(userController.protect, userController.updateUserStatus);
 
 module.exports = router;

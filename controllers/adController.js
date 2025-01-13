@@ -1,7 +1,6 @@
 const Ad = require('../models/adModel');
 const path = require('path');
 const fs = require('fs-extra');
-const { error, time } = require('console');
 const User = require('../models/userModel');
 
 exports.getAllAd = async (req, res, next) => {
