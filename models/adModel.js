@@ -8,6 +8,7 @@ const adSchema = new mongoose.Schema({
     {
       id: Number,
       name: String,
+      url: String,
     },
   ],
   category: [

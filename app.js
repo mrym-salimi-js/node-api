@@ -15,7 +15,11 @@ const cookieParser = require('cookie-parser');
 // --CORS policy
 app.use(cookieParser());
 const corsOptions = {
-  origin: 'http://localhost:5173', // Replace with your client URL
+  origin: [
+    'http://localhost:5173',
+    'https://mrym-salimi-js.github.io',
+    'https://sheypoorchi.vercel.app',
+  ], // Replace with your client URL
   credentials: true, // Allow cookies to be sent from the client
 };
 app.use(cors(corsOptions));

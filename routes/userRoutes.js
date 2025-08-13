@@ -3,17 +3,8 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const multer = require('multer');
 
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    // const fName = file.originalname.split('.')[0];
-    // const tempPath = `public/temp/${file.originalname}`;
-    // await fs.ensureDir(tempPath);
-    cb(null, 'public/user/temp');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${file.originalname}`);
-  },
-});
+// ذخیره فایل‌ها در حافظه (نه روی دیسک)
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.route('/register').post(userController.register);

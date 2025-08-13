@@ -1,7 +1,12 @@
 const Ad = require('../models/adModel');
-const path = require('path');
 const fs = require('fs-extra');
 const User = require('../models/userModel');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const client = require('../utils/s3client');
+require('dotenv').config();
+
+// اتصال به Object Storage لیارا
+const s3Client = client;
 
 exports.getAllAd = async (req, res, next) => {
   try {
@@ -47,7 +52,7 @@ exports.getAd = async (req, res, next) => {
   }
 };
 
-exports.createAd = async (req, res, next) => {
+exports.createAd = async (req, res) => {
   try {
     let {
       photo,
@@ -71,8 +76,9 @@ exports.createAd = async (req, res, next) => {
     location = JSON.parse(location);
     coordinate = JSON.parse(coordinate);
 
+    // ابتدا آگهی رو بدون عکس ذخیره می‌کنیم
     const newAd = await Ad.create({
-      photo,
+      photo: [],
       category,
       attribute,
       title,
@@ -85,16 +91,26 @@ exports.createAd = async (req, res, next) => {
       userId,
     });
 
-    if (newAd && newAd.photo.length > 0) {
-      newAd.photo.map((p) => {
-        const sourcePath = path.join(__dirname, `../public/temp/`, p.name);
-        const destPath = path.join(
-          __dirname,
-          `../public/img/${newAd._id.toString()}`,
-          p.name,
-        );
-        fs.move(sourcePath, destPath);
-      });
+    // اگر عکس فرستاده شده
+    let uploadedPhotos = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const fileKey = `${newAd._id}/${Date.now()}-${file.originalname}`;
+        const params = {
+          Body: file.buffer,
+          Bucket: process.env.LIARA_BUCKET_NAME,
+          Key: fileKey,
+        };
+
+        await s3Client.send(new PutObjectCommand(params));
+
+        const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
+        uploadedPhotos.push({ name: file.originalname, url: fileUrl });
+      }
+
+      // آپدیت فیلد photo در دیتابیس
+      newAd.photo = uploadedPhotos;
+      await newAd.save();
     }
 
     res.status(201).json({

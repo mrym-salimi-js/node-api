@@ -4,9 +4,14 @@ const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email');
 const fs = require('fs-extra');
 const Ad = require('../models/adModel');
-const path = require('path');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const client = require('../utils/s3client');
+
+// اتصال به Object Storage لیارا
+const s3Client = client;
 
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
@@ -363,40 +368,34 @@ exports.getUserById = async (req, res, next) => {
     });
   }
 };
+
 exports.updatePhoto = async (req, res) => {
   try {
     const file = req.file;
     const userId = req.user.id;
+
+    if (!file) {
+      return res
+        .status(400)
+        .json({ status: 'fail', message: 'No file uploaded' });
+    }
+
+    const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
+    const params = {
+      Body: file.buffer,
+      Bucket: process.env.LIARA_BUCKET_NAME,
+      Key: fileKey,
+    };
+    await s3Client.send(new PutObjectCommand(params));
+
+    const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET}/${fileKey}`;
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { photo: file.originalname },
+      { photo: fileUrl },
       { new: true },
     );
 
-    if (updatedUser) {
-      const sourcePath = path.join(
-        __dirname,
-        `../public/user/temp`,
-        updatedUser.photo,
-      );
-
-      const destPath = path.join(
-        __dirname,
-        `../public/user/img`,
-        updatedUser.photo,
-      );
-
-      fs.pathExists(destPath)
-        .then((exists) => {
-          if (exists) {
-            fs.remove(destPath);
-            fs.move(sourcePath, destPath);
-          }
-        })
-        .then(() => {
-          return fs.move(sourcePath, destPath);
-        });
-    }
     res.status(200).json({
       status: 'success',
       data: updatedUser,
@@ -408,6 +407,7 @@ exports.updatePhoto = async (req, res) => {
     });
   }
 };
+
 exports.getAdminAccount = async (req, res, next) => {
   try {
     res.status(200).json({
