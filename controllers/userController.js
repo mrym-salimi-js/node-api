@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const client = require('../utils/s3client');
+const client = require('../utils/s3Client');
 
 // اتصال به Object Storage لیارا
 const s3Client = client;
@@ -388,7 +388,7 @@ exports.updatePhoto = async (req, res) => {
     };
     await s3Client.send(new PutObjectCommand(params));
 
-    const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET}/${fileKey}`;
+    const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
