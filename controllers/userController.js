@@ -114,7 +114,7 @@ exports.protect = async (req, res, next) => {
     const token = req.cookies['user-token'];
 
     if (!token) {
-      return res.status(500).json({
+      return res.status(401).json({
         status: 'fail',
         message: 'توکنی یافت نشد',
       });
@@ -438,31 +438,29 @@ exports.getAdsByCreator = async (req, res, next) => {
     });
   }
 };
+
 exports.updateSavedAds = async (req, res) => {
   try {
-    // console.log(req.user);
-    constid = ObjectId.createFromHexString(req.user.id);
-    const getSavedAd = await User.find({
-      _id: id,
-      savedAd: { $in: req.params.adId },
-    });
-    const update =
-      getSavedAd.length > 0
-        ? { $pull: { savedAd: req.params.adId } }
-        : { $addToSet: { savedAd: req.params.adId } };
+    const id = ObjectId.createFromHexString(req.user.id);
+    const adId = req.params.adId;
+
+    const user = await User.findOne({ _id: id });
+
+    let update;
+    if (user.savedAd.includes(adId)) {
+      update = { $pull: { savedAd: adId } }; // حذف از آرایه
+    } else {
+      update = { $addToSet: { savedAd: adId } }; // اضافه به آرایه
+    }
 
     await User.updateOne({ _id: id }, update);
 
-    res.status(200).json({
-      status: 'success',
-    });
+    res.status(200).json({ status: 'success' });
   } catch (error) {
-    res.status(404).json({
-      status: 'fail',
-      message: error.message,
-    });
+    res.status(404).json({ status: 'fail', message: error.message });
   }
 };
+
 exports.getSavedAds = async (req, res) => {
   try {
     const savedId = req.user.savedAd;

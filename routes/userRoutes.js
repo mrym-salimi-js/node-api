@@ -48,7 +48,7 @@ router
   .get(userController.protect, userController.getAdsByCreator);
 router
   .route('/saved/:adId')
-  .get(userController.protect, userController.updateSavedAds);
+  .patch(userController.protect, userController.updateSavedAds);
 router
   .route('/savedAds')
   .get(userController.protect, userController.getSavedAds);
