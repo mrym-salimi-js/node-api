@@ -68,15 +68,22 @@ exports.createAd = async (req, res) => {
       userId,
     } = req.body;
 
-    photo = photo && JSON.parse(photo);
-    category = category && JSON.parse(category);
-    attribute = JSON.parse(attribute);
-    title = JSON.parse(title);
-    description = JSON.parse(description);
-    location = JSON.parse(location);
-    coordinate = JSON.parse(coordinate);
+    // مطمئن شدن از آماده بودن فیلدها
+    if (!title || !description || !category || !userId) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Missing required fields',
+      });
+    }
 
-    // ابتدا آگهی رو بدون عکس ذخیره می‌کنیم
+    photo = photo ? JSON.parse(photo) : [];
+    category = category ? JSON.parse(category) : [];
+    attribute = attribute ? JSON.parse(attribute) : [];
+    title = title ? JSON.parse(title) : '';
+    description = description ? JSON.parse(description) : '';
+    location = location ? JSON.parse(location) : {};
+    coordinate = coordinate ? JSON.parse(coordinate) : {};
+
     const newAd = await Ad.create({
       photo: [],
       category,
@@ -91,9 +98,11 @@ exports.createAd = async (req, res) => {
       userId,
     });
 
-    // اگر عکس فرستاده شده
-    let uploadedPhotos = [];
+    // کمی delay کوچک برای اطمینان از آماده بودن فایل‌ها (حل race condition موبایل)
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     if (req.files && req.files.length > 0) {
+      const uploadedPhotos = [];
       for (const file of req.files) {
         const fileKey = `${newAd._id}/${Date.now()}-${file.originalname}`;
         const params = {
@@ -108,7 +117,6 @@ exports.createAd = async (req, res) => {
         uploadedPhotos.push({ name: file.originalname, url: fileUrl });
       }
 
-      // آپدیت فیلد photo در دیتابیس
       newAd.photo = uploadedPhotos;
       await newAd.save();
     }
