@@ -97,7 +97,7 @@ exports.createAd = async (req, res) => {
       chat,
       userId,
     });
-
+    console.log(req.body);
     // کمی delay کوچک برای اطمینان از آماده بودن فایل‌ها (حل race condition موبایل)
     await new Promise((resolve) => setTimeout(resolve, 50));
 
