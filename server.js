@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
 
   socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
     // const buffer = Buffer.from(file.file);
-    console.log(adId);
+    // console.log(adId);
     if (!fileInfo) {
       console.error('Invalid fileInfo');
       return;

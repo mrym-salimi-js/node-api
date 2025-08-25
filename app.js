@@ -11,7 +11,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 
 // MIDDLEWARE:
-app.set('trust proxy', true);
+// app.set('trust proxy', true);
 // --CORS policy
 app.use(cookieParser());
 const corsOptions = {

@@ -15,8 +15,9 @@ const userChat = new mongoose.Schema({
     require: true,
   },
   adId: {
-    type: String,
-    require: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ad',
+    required: true,
   },
   type: String,
   size: Number,
@@ -27,6 +28,7 @@ const userChat = new mongoose.Schema({
     },
   },
 });
+userChat.index({ senderId: 1, reciverId: 1, adId: 1 });
 
 const Chat = mongoose.model('Chat', userChat);
 

@@ -30,62 +30,61 @@ exports.chatMessage = async (req, res, next) => {
 
 exports.getContactsList = async (req, res, next) => {
   try {
-    const messagesByUserId = await Chat.find({
+    // 1. گرفتن چت‌ها
+    const chats = await Chat.find({
       $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
-    });
-    if (!messagesByUserId) return;
+    }).sort({ createdAt: 1 });
 
-    const adIds = messagesByUserId?.map((ad) => ad.adId?.toString());
-    if (!adIds) return;
+    // 2. گروه بندی بر اساس adId
+    const grouped = chats.reduce((acc, chat) => {
+      const adId = chat.adId.toString();
+      if (!acc[adId]) acc[adId] = [];
+      acc[adId].push(chat);
+      return acc;
+    }, {});
 
-    const myChat = await Chat.find({
-      $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
-      adId: { $in: [...new Set(adIds)] },
-    });
+    // 3. ساخت لیست کانتکت‌ها بدون تکراری
+    const contacts = [];
+    const addedChatIds = new Set();
 
-    if (!myChat) return;
+    for (const [adId, chatArray] of Object.entries(grouped)) {
+      const firstMessage = chatArray[0];
+      const isBuyer =
+        firstMessage.senderId.toString() === req.user.id.toString();
 
-    let adInfoForChat = [];
-    if (myChat[0].senderId.toString() === req.user.id) {
-      const messagesByAdId = await Ad.find({
-        _id: { $in: adIds },
-      });
-
-      if (!messagesByAdId) return;
-
-      messagesByAdId.map((msg) => {
-        adInfoForChat.push({
-          chatId: msg?.id,
-          creatorId: msg?.userId,
-          adName: msg?.title,
-          photo: msg?.photo,
-          photoPath: 'img',
-          createAt: myChat[myChat.length - 1]?.createAt,
-        });
-      });
-    }
-
-    if (myChat[0].reciverId.toString() === req.user.id) {
-      const senderInfo = await User.find({
-        _id: myChat[0].senderId.toString(),
-      });
-
-      senderInfo.map((msg) => {
-        adInfoForChat.push({
-          chatId: msg?.id,
-          // creatorId: msg?.id,
-          adName: msg?.name,
-          photo: msg?.photo,
-          photoPath: 'user',
-          createAt: myChat[myChat.length - 1]?.createAt,
-        });
-      });
+      if (isBuyer) {
+        const ad = await Ad.findById(adId);
+        if (!addedChatIds.has(ad?.id)) {
+          contacts.push({
+            chatId: ad?.id,
+            creatorId: ad?.userId,
+            adName: ad?.title,
+            photo: ad?.photo,
+            createAt: chatArray[chatArray.length - 1]?.createAt,
+          });
+          addedChatIds.add(ad?.id);
+        }
+      } else {
+        const buyer = await User.findById(firstMessage.senderId).select(
+          'name avatar email',
+        );
+        if (!addedChatIds.has(buyer?.id)) {
+          contacts.push({
+            chatId: buyer?.id,
+            creatorId: buyer?.userId,
+            adName: buyer?.name,
+            photo: buyer?.photo,
+            createAt: chatArray[chatArray.length - 1]?.createAt,
+          });
+          addedChatIds.add(buyer?.id);
+        }
+      }
     }
 
     res.status(200).json({
       status: 'success',
-      result: adInfoForChat.length,
-      data: adInfoForChat,
+      result: contacts.length,
+      data: contacts,
     });
   } catch (error) {
     res.status(404).json({
@@ -97,49 +96,59 @@ exports.getContactsList = async (req, res, next) => {
 
 exports.getChatMessages = async (req, res, next) => {
   try {
-    let data = {};
+    // 1. گرفتن چتهایی ک ه کاربر درش حضور داره
+    const chats = await Chat.find({
+      $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
+    })
+      .populate('adId')
+      .lean();
 
-    const messages = await Chat.find({
-      $or: [
-        { senderId: req.user.id },
-        { reciverId: req.user.id },
-        { adId: req.params.adId },
-      ],
-    });
+    // 2. فیلتر چت ها براساس ایدی دریافتی از فرانت
+    const filteredChats = chats.filter(
+      (i) =>
+        i.adId._id.toString() === req.params.adId.toString() ||
+        i.senderId.toString() === req.params.adId.toString() ||
+        i.reciverId.toString() === req.params.adId.toString(),
+    );
 
-    if (!messages) return;
+    // 3. گروه بندی بر اساس adId
 
-    if (messages[0].reciverId.toString() === req.user.id) {
-      const messageForAdCreator = await Chat.find({
-        $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
-        $or: [{ senderId: req.params.adId }, { reciverId: req.params.adId }],
-      });
-      messageForAdCreator && (data.message = messageForAdCreator);
+    const grouped = filteredChats.reduce((acc, chat) => {
+      const adId = chat.adId?._id.toString(); // adId از populate
+      if (!acc[adId]) {
+        acc[adId] = {
+          ad: chat.adId, // اطلاعات آگهی
+          messages: [], // آرایه پیام‌ها
+        };
+      }
+      acc[adId].messages.push(chat);
+      return acc;
+    }, {});
 
-      const adIds = messageForAdCreator.map((i) => {
-        return i.adId;
-      });
-      const editedAdIds = adIds !== undefined && [...new Set(adIds)];
+    // 4. ساخت لیست پیام های چت
 
-      const selectedAd = await Ad.find({ _id: { $in: editedAdIds } });
+    const chat = [];
 
-      selectedAd !== undefined && (data.ad = selectedAd);
-    }
+    for (const [adId, chatGroup] of Object.entries(grouped)) {
+      const firstMessage = chatGroup?.messages[0]; // اولین پیام
+      const inAdMood =
+        firstMessage.adId?._id.toString() === req.params.adId.toString();
 
-    if (messages[0].senderId.toString() === req.user.id) {
-      const messageForChatStarter = await Chat.find({
-        $or: [{ senderId: req.user.id }, { reciverId: req.user.id }],
-
-        adId: req.params.adId,
-      });
-      // console.log(messages)
-      messageForChatStarter && (data.message = messageForChatStarter);
+      // console.log(isBuyer);
+      if (inAdMood) {
+        // کاربر خریدار است
+        chat.push(chatGroup); // کل آبجکت شامل ad و messages
+      } else {
+        // کاربر فروشنده است
+        firstMessage.senderId.toString() !== req.user.id.toString() &&
+          chat.push(chatGroup);
+      }
     }
 
     res.status(200).json({
       status: 'success',
-      resault: messages.length,
-      data: data,
+      result: chat?.message?.length,
+      data: chat,
     });
   } catch (error) {
     res.status(404).json({
