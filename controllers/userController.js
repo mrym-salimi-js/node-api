@@ -355,7 +355,8 @@ exports.getUserById = async (req, res, next) => {
   // console.log(req.params.userId);
   try {
     const id = ObjectId.createFromHexString(req.params.userId);
-    const user = await User.findById(id);
+
+    const user = id !== null && (await User.findById(id));
 
     res.status(200).json({
       status: 'success',
@@ -480,7 +481,8 @@ exports.updateUserStatus = async (req, res) => {
   try {
     const id = ObjectId.createFromHexString(req.user.id);
 
-    const status = 'online';
+    const status = req.params.status;
+
     await User.findByIdAndUpdate(id, {
       status,
       lastSeen: new Date(),

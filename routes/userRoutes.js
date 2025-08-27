@@ -53,7 +53,7 @@ router
   .route('/savedAds')
   .get(userController.protect, userController.getSavedAds);
 router
-  .route('/status')
+  .route('/status/:status')
   .get(userController.protect, userController.updateUserStatus);
 
 module.exports = router;

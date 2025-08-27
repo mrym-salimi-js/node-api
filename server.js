@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const fCreater = require('fs-extra');
 const Chat = require('./models/chatModel');
+const { updateUserStatus } = require('./controllers/userController');
 
 // Database connection with mongoose
 const dbUri = process.env.DATABASE.replace(
@@ -91,7 +92,15 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error('Socket error:', error);
   });
-  socket.on('disconnect', () => {
-    // console.log('Client disconnected');
+
+  // Ser User Status
+  // socket.on('user-status', async ({ userId, status }) => {
+  //   // ذخیره وضعیت در دیتابیس
+  //   await updateUserStatus(userId, status);
+  // });
+
+  socket.on('disconnect', async () => {
+    // اگر میخوای دقیق باشه، کاربر رو آفلاین کن
+    // await updateUserStatus(userId, 'offline');
   });
 });
