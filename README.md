@@ -65,7 +65,7 @@
    npm install
    ```
 
-3. **Create a `.env` file and configure environment variables**  
+3. **Create a `.env` file and configure environment variables**
    **ساخت فایل `.env` و تنظیم مقادیر موردنیاز**  
    ```env
    PORT=5000
@@ -75,7 +75,7 @@
    AWS_SECRET_ACCESS_KEY=your_secret_key
    ```
 
-4. **Run in development mode**  
+5. **Run in development mode**  
    **اجرای پروژه در حالت توسعه**  
    ```bash
    npm run dev
@@ -92,6 +92,7 @@
 ## مشارکت  
 
 Feel free to open an **Issue** or submit a **Pull Request** for improvements.  
+
 برای پیشنهاد بهبود می‌توانید یک **Issue** باز کنید یا **Pull Request** ارسال کنید.  
 
 ---
@@ -100,7 +101,9 @@ Feel free to open an **Issue** or submit a **Pull Request** for improvements.
 ## لایسنس  
 
 This project is licensed under the **MIT License**.  
+
 این پروژه تحت لایسنس **MIT** منتشر شده است.  
 
-See [LICENSE](./LICENSE) for details.  
+See [LICENSE](./LICENSE) for details.
+
 برای جزئیات به فایل [LICENSE](./LICENSE) مراجعه کنید.
