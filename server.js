@@ -3,11 +3,10 @@ const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 const app = require('./app');
 const { Server } = require('socket.io');
-const path = require('path');
-const fs = require('fs');
-const fCreater = require('fs-extra');
 const Chat = require('./models/chatModel');
-const { updateUserStatus } = require('./controllers/userController');
+
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = require('./utils/s3Client'); // مثل همون که برای پروفایل داری
 
 // Database connection with mongoose
 const dbUri = process.env.DATABASE.replace(
@@ -51,56 +50,90 @@ io.on('connection', (socket) => {
 
   // Set File
 
+  // socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
+  //   // const buffer = Buffer.from(file.file);
+  //   // console.log(adId);
+  //   if (!fileInfo) {
+  //     console.error('Invalid fileInfo');
+  //     return;
+  //   }
+  //   const chat = new Chat({
+  //     adId: adId,
+  //     senderId: senderId,
+  //     reciverId: reciverId,
+  //     message: fileInfo.fileName,
+  //     type: 'file',
+  //     size: fileInfo.size,
+  //   });
+  //   if (!fileInfo) return;
+
+  //   await chat.save();
+  //   socket.broadcast.emit('file', { adId, senderId, reciverId, fileInfo });
+
+  //   if (!chat) return;
+
+  //   const chatsFilePath = `public/chat/${senderId}-${reciverId}-${adId}`;
+  //   await fCreater.ensureDir(chatsFilePath);
+  //   const filePath = path.join(__dirname, chatsFilePath, fileInfo?.fileName);
+
+  //   fs.writeFile(filePath, fileInfo.file, (error) => {
+  //     if (error) {
+  //       console.error(error);
+  //       socket.emit('upload error', 'Error saving file');
+  //       return;
+  //     }
+
+  //     console.log('File saved:', filePath);
+  //     socket.emit('upload success', 'File uploaded successfully');
+  //   });
+  // });
   socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
-    // const buffer = Buffer.from(file.file);
-    // console.log(adId);
-    if (!fileInfo) {
-      console.error('Invalid fileInfo');
-      return;
-    }
-    const chat = new Chat({
-      adId: adId,
-      senderId: senderId,
-      reciverId: reciverId,
-      message: fileInfo.fileName,
-      type: 'file',
-      size: fileInfo.size,
-    });
-    if (!fileInfo) return;
+    if (!fileInfo) return console.error('Invalid fileInfo');
 
-    await chat.save();
-    socket.broadcast.emit('file', { adId, senderId, reciverId, fileInfo });
+    try {
+      // آپلود فایل به لیارا
+      const fileKey = `chat/${senderId}-${reciverId}-${adId}/${Date.now()}_${fileInfo.fileName}`;
+      await s3Client.send(
+        new PutObjectCommand({
+          Body: fileInfo.file,
+          Bucket: process.env.LIARA_BUCKET_NAME,
+          Key: fileKey,
+        }),
+      );
 
-    if (!chat) return;
+      const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
 
-    const chatsFilePath = `public/chat/${senderId}-${reciverId}-${adId}`;
-    await fCreater.ensureDir(chatsFilePath);
-    const filePath = path.join(__dirname, chatsFilePath, fileInfo?.fileName);
+      // ذخیره در دیتابیس
+      const chat = new Chat({
+        adId,
+        senderId,
+        reciverId,
+        message: fileUrl,
+        type: 'file',
+        size: fileInfo.size,
+      });
+      await chat.save();
 
-    fs.writeFile(filePath, fileInfo.file, (error) => {
-      if (error) {
-        console.error(error);
-        socket.emit('upload error', 'Error saving file');
-        return;
-      }
+      // ارسال فایل برای همه (از جمله خود فرستنده)
+      const payload = {
+        adId,
+        senderId,
+        reciverId,
+        fileInfo: { ...fileInfo, url: fileUrl },
+      };
+      io.emit('file', payload); // این همه رو آپدیت می‌کنه
 
-      console.log('File saved:', filePath);
       socket.emit('upload success', 'File uploaded successfully');
-    });
+    } catch (err) {
+      console.error(err);
+      socket.emit('upload error', 'Error uploading file');
+    }
   });
-
   socket.on('error', (error) => {
     console.error('Socket error:', error);
   });
 
-  // Ser User Status
-  // socket.on('user-status', async ({ userId, status }) => {
-  //   // ذخیره وضعیت در دیتابیس
-  //   await updateUserStatus(userId, status);
-  // });
-
   socket.on('disconnect', async () => {
-    // اگر میخوای دقیق باشه، کاربر رو آفلاین کن
-    // await updateUserStatus(userId, 'offline');
+    // console.log('disconnect');
   });
 });
