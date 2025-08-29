@@ -50,43 +50,6 @@ io.on('connection', (socket) => {
 
   // Set File
 
-  // socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
-  //   // const buffer = Buffer.from(file.file);
-  //   // console.log(adId);
-  //   if (!fileInfo) {
-  //     console.error('Invalid fileInfo');
-  //     return;
-  //   }
-  //   const chat = new Chat({
-  //     adId: adId,
-  //     senderId: senderId,
-  //     reciverId: reciverId,
-  //     message: fileInfo.fileName,
-  //     type: 'file',
-  //     size: fileInfo.size,
-  //   });
-  //   if (!fileInfo) return;
-
-  //   await chat.save();
-  //   socket.broadcast.emit('file', { adId, senderId, reciverId, fileInfo });
-
-  //   if (!chat) return;
-
-  //   const chatsFilePath = `public/chat/${senderId}-${reciverId}-${adId}`;
-  //   await fCreater.ensureDir(chatsFilePath);
-  //   const filePath = path.join(__dirname, chatsFilePath, fileInfo?.fileName);
-
-  //   fs.writeFile(filePath, fileInfo.file, (error) => {
-  //     if (error) {
-  //       console.error(error);
-  //       socket.emit('upload error', 'Error saving file');
-  //       return;
-  //     }
-
-  //     console.log('File saved:', filePath);
-  //     socket.emit('upload success', 'File uploaded successfully');
-  //   });
-  // });
   socket.on('uploadFile', async ({ adId, senderId, reciverId, fileInfo }) => {
     if (!fileInfo) return console.error('Invalid fileInfo');
 
