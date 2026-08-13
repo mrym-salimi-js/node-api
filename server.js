@@ -1,3 +1,7 @@
+const dns = require('dns');
+
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
@@ -14,7 +18,14 @@ const dbUri = process.env.DATABASE.replace(
   process.env.DATABASE_PASSWORD,
 );
 // console.log(dbUri);
-mongoose.connect(dbUri).then(console.log('connect to database'));
+mongoose
+  .connect(dbUri)
+  .then(() => {
+    console.log('Connected to database successfully');
+  })
+  .catch((err) => {
+    console.error('Database connection failed:', err);
+  });
 
 // Server connection
 const port = process.env.PORT;
