@@ -17,10 +17,9 @@ const dbUri = process.env.DATABASE.replace(
 mongoose.connect(dbUri).then(console.log('connect to database'));
 
 // Server connection
-
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
