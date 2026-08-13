@@ -56,7 +56,13 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
+//test
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Server is running',
+  });
+});
 // Static Route
 app.use(express.static(path.join(__dirname, 'public')));
 // --Routes
