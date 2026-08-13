@@ -17,9 +17,11 @@ const dbUri = process.env.DATABASE.replace(
 mongoose.connect(dbUri).then(console.log('connect to database'));
 
 // Server connection
-const port = process.env.PORT;
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`App is running on port ${port}`);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 // Socket Connection
