@@ -25,6 +25,7 @@
     "express-rate-limit": "^7.4.1",
     "fs-extra": "^11.2.0",
     "helmet": "^8.0.0",
+    "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "kavenegar": "^1.1.4",

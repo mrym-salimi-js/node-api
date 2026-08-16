@@ -2,11 +2,18 @@ const Ad = require('../models/adModel');
 const fs = require('fs-extra');
 const User = require('../models/userModel');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const client = require('../utils/s3Client');
+// const client = require('../utils/s3Client');
 require('dotenv').config();
 
 // اتصال به Object Storage لیارا
-const s3Client = client;
+// const s3Client = client;
+
+// connect to ImageKit for upload file
+const ImageKit = require('imagekit');
+const imagekit = new ImageKit({
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
 
 exports.getAllAd = async (req, res, next) => {
   try {
@@ -104,17 +111,18 @@ exports.createAd = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const uploadedPhotos = [];
       for (const file of req.files) {
-        const fileKey = `${newAd._id}/${Date.now()}-${file.originalname}`;
-        const params = {
-          Body: file.buffer,
-          Bucket: process.env.LIARA_BUCKET_NAME,
-          Key: fileKey,
-        };
+        const fileName = `${Date.now()}-${file.originalname}`;
 
-        await s3Client.send(new PutObjectCommand(params));
+        const response = await imagekit.upload({
+          file: file.buffer,
+          fileName,
+          folder: `/sheypoorchi/ads/${newAd._id}`,
+        });
 
-        const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
-        uploadedPhotos.push({ name: file.originalname, url: fileUrl });
+        uploadedPhotos.push({
+          name: file.originalname,
+          url: response.url,
+        });
       }
 
       newAd.photo = uploadedPhotos;

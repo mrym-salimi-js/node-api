@@ -8,10 +8,19 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const client = require('../utils/s3Client');
+
+// const client = require('../utils/s3Client');
 
 // اتصال به Object Storage لیارا
-const s3Client = client;
+// const s3Client = client;
+
+// connect to ImageKit for upload file
+const ImageKit = require('imagekit');
+
+const imagekit = new ImageKit({
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
 
 const signJwt = async (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
@@ -382,14 +391,14 @@ exports.updatePhoto = async (req, res) => {
     }
 
     const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
-    const params = {
-      Body: file.buffer,
-      Bucket: process.env.LIARA_BUCKET_NAME,
-      Key: fileKey,
-    };
-    await s3Client.send(new PutObjectCommand(params));
 
-    const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
+    const response = await imagekit.upload({
+      file: file.buffer,
+      fileName: `${Date.now()}_${file.originalname}`,
+      folder: `/sheypoorchi/users/${userId}`,
+    });
+
+    const fileUrl = response.url;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
