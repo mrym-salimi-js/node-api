@@ -380,27 +380,91 @@ exports.getUserById = async (req, res, next) => {
   }
 };
 
+// exports.updatePhoto = async (req, res) => {
+//   try {
+//     const file = req.file;
+//     const userId = req.user.id;
+
+//     if (!file) {
+//       return res
+//         .status(400)
+//         .json({ status: 'fail', message: 'No file uploaded' });
+//     }
+
+//     const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
+
+//     const response = await imagekit.upload({
+//       file: file.buffer,
+//       fileName: `${Date.now()}_${file.originalname}`,
+//       folder: `/sheypoorchi/users/${userId}`,
+//     });
+
+//     const fileUrl = response.url;
+
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { photo: fileUrl },
+//       { new: true },
+//     );
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: updatedUser,
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       status: 'fail',
+//       message: error.message,
+//     });
+//   }
+// };
 exports.updatePhoto = async (req, res) => {
   try {
     const file = req.file;
     const userId = req.user.id;
 
     if (!file) {
-      return res
-        .status(400)
-        .json({ status: 'fail', message: 'No file uploaded' });
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No file uploaded',
+      });
     }
 
-    const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
+    // دریافت عکس فعلی کاربر
+    const user = await User.findById(userId);
+
+    // اگر کاربر عکس قبلی دارد، آن را از ImageKit حذف کن
+    if (user.photo) {
+      const oldPhotoUrl = new URL(user.photo);
+
+      // pathname:
+      // /sheypoorchi/users/123/1755103558002-avatar.jpg
+      const oldPhotoPath = decodeURIComponent(oldPhotoUrl.pathname);
+
+      const files = await imagekit.listFiles({
+        path: `/sheypoorchi/users/${userId}`,
+      });
+
+      const oldFile = files.find((item) => item.filePath === oldPhotoPath);
+
+      if (oldFile) {
+        await imagekit.deleteFile(oldFile.fileId);
+      }
+    }
+
+    // آپلود عکس جدید
+    const fileName = `${Date.now()}_${file.originalname}`;
 
     const response = await imagekit.upload({
       file: file.buffer,
-      fileName: `${Date.now()}_${file.originalname}`,
+      fileName,
       folder: `/sheypoorchi/users/${userId}`,
     });
 
+    // URL عکس جدید
     const fileUrl = response.url;
 
+    // ذخیره URL جدید در MongoDB
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { photo: fileUrl },
