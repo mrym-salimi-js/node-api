@@ -7,7 +7,8 @@ const Ad = require('../models/adModel');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const client = require('../utils/s3Client');
 
 // اتصال به Object Storage لیارا
@@ -370,27 +371,79 @@ exports.getUserById = async (req, res, next) => {
   }
 };
 
+// exports.updatePhoto = async (req, res) => {
+//   try {
+//     const file = req.file;
+//     const userId = req.user.id;
+
+//     if (!file) {
+//       return res
+//         .status(400)
+//         .json({ status: 'fail', message: 'No file uploaded' });
+//     }
+
+//     const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
+//     const params = {
+//       Body: file.buffer,
+//       Bucket: process.env.LIARA_BUCKET_NAME,
+//       Key: fileKey,
+//     };
+//     await s3Client.send(new PutObjectCommand(params));
+
+//     const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
+
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { photo: fileUrl },
+//       { new: true },
+//     );
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: updatedUser,
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       status: 'fail',
+//       message: error.message,
+//     });
+//   }
+// };
 exports.updatePhoto = async (req, res) => {
   try {
     const file = req.file;
     const userId = req.user.id;
 
     if (!file) {
-      return res
-        .status(400)
-        .json({ status: 'fail', message: 'No file uploaded' });
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No file uploaded',
+      });
     }
 
     const fileKey = `user/${userId}/${Date.now()}_${file.originalname}`;
-    const params = {
-      Body: file.buffer,
+
+    // 1. Upload
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.LIARA_BUCKET_NAME,
+        Key: fileKey,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      }),
+    );
+
+    // 2. Create signed URL
+    const command = new GetObjectCommand({
       Bucket: process.env.LIARA_BUCKET_NAME,
       Key: fileKey,
-    };
-    await s3Client.send(new PutObjectCommand(params));
+    });
 
-    const fileUrl = `${process.env.LIARA_ENDPOINT}/${process.env.LIARA_BUCKET_NAME}/${fileKey}`;
+    const fileUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 60 * 60 * 24 * 7,
+    });
 
+    // 3. Save URL
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { photo: fileUrl },
@@ -408,7 +461,6 @@ exports.updatePhoto = async (req, res) => {
     });
   }
 };
-
 exports.getAdminAccount = async (req, res, next) => {
   try {
     res.status(200).json({
