@@ -1,7 +1,7 @@
 const Ad = require('../models/adModel');
 const fs = require('fs-extra');
 const User = require('../models/userModel');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
+// const { PutObjectCommand } = require('@aws-sdk/client-s3');
 // const client = require('../utils/s3Client');
 require('dotenv').config();
 
