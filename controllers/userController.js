@@ -418,70 +418,70 @@ exports.getUserById = async (req, res, next) => {
 //     });
 //   }
 // };
-// exports.updatePhoto = async (req, res) => {
-//   try {
-//     const file = req.file;
-//     const userId = req.user.id;
+exports.updatePhoto = async (req, res) => {
+  try {
+    const file = req.file;
+    const userId = req.user.id;
 
-//     if (!file) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         message: 'No file uploaded',
-//       });
-//     }
+    if (!file) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No file uploaded',
+      });
+    }
 
-//     // دریافت عکس فعلی کاربر
-//     const user = await User.findById(userId);
+    // دریافت عکس فعلی کاربر
+    const user = await User.findById(userId);
 
-//     // اگر کاربر عکس قبلی دارد، آن را از ImageKit حذف کن
-//     if (user.photo) {
-//       const oldPhotoUrl = new URL(user.photo);
+    // اگر کاربر عکس قبلی دارد، آن را از ImageKit حذف کن
+    if (user.photo) {
+      const oldPhotoUrl = new URL(user.photo);
 
-//       // pathname:
-//       // /sheypoorchi/users/123/1755103558002-avatar.jpg
-//       const oldPhotoPath = decodeURIComponent(oldPhotoUrl.pathname);
+      // pathname:
+      // /sheypoorchi/users/123/1755103558002-avatar.jpg
+      const oldPhotoPath = decodeURIComponent(oldPhotoUrl.pathname);
 
-//       const files = await imagekit.listFiles({
-//         path: `/sheypoorchi/users/${userId}`,
-//       });
+      const files = await imagekit.listFiles({
+        path: `/sheypoorchi/users/${userId}`,
+      });
 
-//       const oldFile = files.find((item) => item.filePath === oldPhotoPath);
+      const oldFile = files.find((item) => item.filePath === oldPhotoPath);
 
-//       if (oldFile) {
-//         await imagekit.deleteFile(oldFile.fileId);
-//       }
-//     }
+      if (oldFile) {
+        await imagekit.deleteFile(oldFile.fileId);
+      }
+    }
 
-//     // آپلود عکس جدید
-//     const fileName = `${Date.now()}_${file.originalname}`;
+    // آپلود عکس جدید
+    const fileName = `${Date.now()}_${file.originalname}`;
 
-//     const response = await imagekit.upload({
-//       file: file.buffer,
-//       fileName,
-//       folder: `/sheypoorchi/users/${userId}`,
-//     });
+    const response = await imagekit.upload({
+      file: file.buffer,
+      fileName,
+      folder: `/sheypoorchi/users/${userId}`,
+    });
 
-//     // URL عکس جدید
-//     const fileUrl = response.url;
+    // URL عکس جدید
+    const fileUrl = response.url;
 
-//     // ذخیره URL جدید در MongoDB
-//     const updatedUser = await User.findByIdAndUpdate(
-//       userId,
-//       { photo: fileUrl },
-//       { new: true },
-//     );
+    // ذخیره URL جدید در MongoDB
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { photo: fileUrl },
+      { new: true },
+    );
 
-//     res.status(200).json({
-//       status: 'success',
-//       data: updatedUser,
-//     });
-//   } catch (error) {
-//     res.status(400).json({
-//       status: 'fail',
-//       message: error.message,
-//     });
-//   }
-// };
+    res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
 
 exports.getAdminAccount = async (req, res, next) => {
   try {
